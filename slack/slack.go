@@ -1,5 +1,8 @@
 package slack
 
+import (
+    "github.com/jmichalice/tacofancy-slack/tacofancy"
+)
 // Example slash command from docs
 //     token=gIkuvaNzQIHg97ATvDxqgjtO
 // team_id=T0001
@@ -35,8 +38,25 @@ func (sc *SlashCommand) Respond() (SlashCommandResponse, error) {
     // respond to slash command
 
     // could make this more dynamic, but keeping it simple for now
+    // and a Taco interface could make this simpler by not needing different vars for different taco types
     if sc.Command == "taco" {
-        return SlashCommandResponse{ResponseType: "in_channel", Text: "I will eventually link to a taco recipe"}, nil
+        fullTaco, err := tacofancy.GetRandomFullTaco()
+
+        attachments := make([]map[string]string)
+        attachments["title"] = fullTaco.Name
+        attachments["title_link"] = fullTaco.URL
+        attachments["text"] = fullTaco.Description()
+        return SlashCommandResponse{
+            ResponseType: "in_channel", Text: "",
+            Attachments: attachments}, nil
+    } else if sc.Command == "wildcard" {
+        randomTaco, err := tacofancy.GetRandomFullTaco()
+        attachments := make([]map[string]string)
+        attachments["title"] = "A Delicious Random Taco"
+        attachments["text"] = randomTaco.Description()
+        return SlashCommandResponse{
+            ResponseType: "in_channel", Text: ""
+            Attachments: attachments}, nil
     } else {
         return SlashCommandResponse{ResponseType: "in_channel", Text: "I didn't understand that command"}, nil
     }
