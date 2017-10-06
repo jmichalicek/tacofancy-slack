@@ -8,8 +8,33 @@ import (
 	"os"
 	"strings"
 	"time"
+	"math/rand"
 )
 
+
+func getQuote() string {
+	tacoQuotes := make([]string, 12, 12)
+	tacoQuotes[0] = "Yo quiero chimichangas y chile colorado\nYo tengo el dinero para un steak picado\nLas flautas y tamales, siempre muy bueno\nY el chile relleno"
+	tacoQuotes[1] = "You see, I just gotta have a tostada, carne asada\nThat's right, I want the whole enchilada\nMy only addiction has to do with a flour tortilla\nI need a quesadilla"
+	tacoQuotes[2] = "I love to stuff my face with tacos al carbón\nWith my friends, or when I'm all alone\nYo tengo mucho hambre y ahora lo quiero\nUn burrito ranchero"
+	tacoQuotes[3] = "So give me something spicy and hot, now\nBreak out the menu, what you got, now?\nOh, would you tell the waiter I'd like to have sour cream on the side\nYou better make sure the beans are refried"
+	tacoQuotes[4] = "Well, there's not a taco big enough for a man like me\nThat's why I order two or three\nLet me give you a tip, just try a nacho chip\nIt's really good with bean dip"
+	tacoQuotes[5] = "I eat uno, dos, tres, quatro burritos\nPretty soon I can't fit in my Speedos\nWell, I hope they feed us lots of chicken fajitas\nAnd a pitcher of margaritas"
+	tacoQuotes[6] = "Well, the combination plates all come with beans and rice\nThe taquitos here are very nice\nNow I'm down on my knees, we need some extra tomatoes and cheese\nAnd could you make that separate checks, please?"
+	tacoQuotes[7] = "Well, the food is coming, I can hardly wait\nNow watch your fingers, careful hot plate!\nWhat you think you're doing with my chile con queso?\nWell, if you want some, just say so"
+	tacoQuotes[8] = "Oh boy, pico de gallo\nThey sure don't make it like this in Ohio\nNo gracias, yo quiero jalapeños, nada más\nYou can toss away the hot sauce"
+	tacoQuotes[9] = "Donde estan los nachos? Holy frijole!\nYou better get me a bowl of guacamole\nY Usted, Eugene? Why's your face turning green?\nDon't you like pinto beans?"
+	tacoQuotes[10] = "You want some more cinnamon crispas?\nIf you don't, hasta la vista\nJust take the rest home in a doggie bag if you wanna\nYou can finish it mañana"
+	tacoQuotes[11] = "Well, it's been a pleasure, I can't eat no more\nSeñor, la cuenta, por favor\nIf you ain't ever tried real Mexican cooking, well, you oughta\nJust don't drink the water"
+
+	random := func (min, max int) int {
+    	rand.Seed(time.Now().Unix())
+    	return rand.Intn(max - min) + min
+	}
+
+	r := random(0, 11)
+	return tacoQuotes[r]
+}
 // Example slash command from docs
 //     token=gIkuvaNzQIHg97ATvDxqgjtO
 // team_id=T0001
@@ -126,6 +151,11 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 		}
 		attachments[0]["fields"] = fields
 
+		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+	} else if commandType == "grande" {
+		attachments[0]["title"] = "Taco Grande"
+		attachments[0]["title_link"] = "https://www.youtube.com/watch?v=mX18yNwqnMg"
+		attachments[0]["text"] = getQuote()
 		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
 	}
 	return SlashCommandResponse{ResponseType: "in_channel", Text: "I didn't understand that command"}, nil
