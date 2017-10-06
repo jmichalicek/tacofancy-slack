@@ -1,11 +1,12 @@
 package slack
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/jmichalicek/tacofancy-slack/tacofancy"
 	"net/http"
+	"os"
 	"time"
-	"bytes"
 )
 
 // Example slash command from docs
@@ -43,6 +44,11 @@ type AttachmentField struct {
 	Title string
 	Value string
 	Short bool
+}
+
+// TODO:
+func VerifyToken(token string) bool {
+	return token == os.Getenv("TACOFANCY_SLACK_TOKEN")
 }
 
 func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
