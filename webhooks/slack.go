@@ -11,17 +11,18 @@ import (
 func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 	// does not come in as json, but response should be json
 	command, text, token := r.FormValue("command"), r.FormValue("text"), r.FormValue("token")
-	slashCommand := &slack.SlashCommand{Command: command, Text: text, Token: token}
+	responseURL, channelId, userId := r.FormValue("response_url"), r.FormValue("channel_id"), r.FormValue("user_id")
+	slashCommand := slack.SlashCommand{
+		Command: command, Text: text, Token: token, ResponseURL: responseURL, ChannelId: channelId, UserId: userId}
 
-	// could move some of this to the SlashCommand
-	go sendAsynResponse(*slashCommand)
-	// responseData, _ := slashCommand.Respond()
-	// responseJSON, _ := json.Marshal(responseData)
+	if slack.VerifyToken(slashCommand.Token) {
+		// could move some of this to the SlashCommand
+		go sendAsynResponse(slashCommand)
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(400)
+	}
 
-	// TODO: Parse the incoming json and do stuff
-	//w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(200)
-	// w.Write("")
 }
 
 func sendAsynResponse(sc slack.SlashCommand) {
