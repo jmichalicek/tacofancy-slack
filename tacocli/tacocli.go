@@ -7,27 +7,7 @@ import (
     "flag"
 )
 
-func showRandomTacoParts(showJSON, showDesc bool) {
-    taco, err := tacofancy.GetRandomTacoParts()
-
-    // move this back to main() by using a Taco interface
-    s, err := json.MarshalIndent(taco, "", "  ")
-    if err != nil {
-        fmt.Println(err)
-    }
-    if showJSON {
-        fmt.Println(string(s))
-    }
-
-    if showDesc {
-        fmt.Println(taco.Description())
-    }
-}
-
-func showFullRandomTaco(showJSON, showDesc bool) {
-    taco, err := tacofancy.GetRandomFullTaco()
-
-    // move this back to main() by using a Taco interface
+func showTaco(taco tacofancy.Taco, showJSON bool, showDesc bool) {
     s, err := json.MarshalIndent(taco, "", "  ")
     if err != nil {
         fmt.Println(err)
@@ -48,24 +28,21 @@ func main() {
     randomTaco := flag.Bool(
         "random", false, "Show a random selection of base layer, seasoning, mixin, condiment, and shell")
     flag.Parse()
-
-    // I could use a Taco interface to reduce duplication here, I think
     if *randomTaco {
-        showRandomTacoParts(*showJSON, *showDesc)
+        // showRandomTacoParts(*showJSON, *showDesc)
+        taco, err := tacofancy.GetRandomFullTaco()
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        showTaco(&taco, *showJSON, *showDesc)
     } else {
-        showFullRandomTaco(*showJSON, *showDesc)
+        //showFullRandomTaco(*showJSON, *showDesc)
+        taco, err := tacofancy.GetRandomFullTaco()
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        showTaco(&taco, *showJSON, *showDesc)
     }
-
-    // s, err := json.MarshalIndent(taco, "", "  ")
-    // if err != nil {
-    //     fmt.Println(err)
-    // }
-    //
-    // if *showJSON {
-    //     fmt.Println(string(s))
-    // }
-    //
-    // if *showDesc {
-    //     fmt.Println(taco.Description())
-    // }
 }
