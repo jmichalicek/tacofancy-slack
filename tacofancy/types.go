@@ -22,28 +22,28 @@ type RandomTaco struct {
 func (t *RandomTaco) Description() string {
 
 	// shell names are inconsistent, but roll with this for now
-	_, desc := t.BaseLayer.Name + " seasoned with ", t.Seasoning.Name + " with " + t.Mixin.Name + " and " +
-		t.Condiment.Name + " in " + t.Shell.Name + "."
-    return desc
+	_, desc := t.BaseLayer.Name+" seasoned with ", t.Seasoning.Name+" with "+t.Mixin.Name+" and "+
+		t.Condiment.Name+" in "+t.Shell.Name+"."
+	return desc
 }
 
 type FullTaco struct {
-	Name string `json:"name"`
-	Url string `json:"url"`
+	Name   string `json:"name"`
+	URL    string `json:"url"`
 	Recipe string `json:"recipe"`
 	Slug   string `json:"slug"`
 
 	// full taco api doubles up url stuff for some reaosn
-	BaseLayerURL string `json:"base_layer_url"`
-	BaseLayer TacoPart `json:"base_layer"`
-	MixinURL string `json:"mixin_url"`
-	Mixin     TacoPart `json:"mixin"`
-	CondimentURL string `json:"condiment_url"`
-	Condiment TacoPart `json:"condiment"`
-	SeasoningURL string `json:"seasoning_url"`
-	Seasoning TacoPart `json:"seasoning"`
-	ShellURL string `json:"shell_url"`
-	Shell     TacoPart `json:"shell"`
+	BaseLayerURL string   `json:"base_layer_url"`
+	BaseLayer    TacoPart `json:"base_layer"`
+	MixinURL     string   `json:"mixin_url"`
+	Mixin        TacoPart `json:"mixin"`
+	CondimentURL string   `json:"condiment_url"`
+	Condiment    TacoPart `json:"condiment"`
+	SeasoningURL string   `json:"seasoning_url"`
+	Seasoning    TacoPart `json:"seasoning"`
+	ShellURL     string   `json:"shell_url"`
+	Shell        TacoPart `json:"shell"`
 }
 
 func (t *FullTaco) Description() string {
@@ -70,5 +70,5 @@ func (t *FullTaco) Description() string {
 	// 	_, desc = desc + " in " + t.Shell.Name + "."
 	// }
 
-    return desc
+	return desc
 }
