@@ -93,3 +93,26 @@ type SlashCommandResponse struct {
     // using interface as the value data type here because it could be strings or a list
     Attachments []map[string]interface{} `json:"attachments"`
 }
+
+func SendDelayedResponse(sc SlashCommand) error {
+    var httpClient = &http.Client{
+    	Timeout: time.Second * 10,
+    }
+    url := sc.ResponsseURL
+    commandResponse := sc.Respond()
+    commandResponseJson, err := json.Marshal(scr, "", "  ")
+    if err != nil {
+        return err
+    }
+    
+    // jsonStr and bytes.NewBuffer() from https://stackoverflow.com/a/24455606
+    // TODO: See if there is a better way
+    jsonStr := []byte(commandResponseJson)
+    resp, err := httpClient.Post(url, "application/json", bytes.NewBuffer(jsonStr))
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    return
+}
