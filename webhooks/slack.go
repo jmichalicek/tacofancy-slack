@@ -1,8 +1,9 @@
 package webhooks
+
 // should I make a webhooks/slack package instead?
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"github.com/jmichalicek/tacofancy-slack/slack"
 	"net/http"
 )
@@ -13,10 +14,20 @@ func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 	slashCommand := &slack.SlashCommand{Command: command, Text: text, Token: token}
 
 	// could move some of this to the SlashCommand
-	responseData, _ := slashCommand.Respond()
-	responseJSON, _ := json.Marshal(responseData)
+	go sendAsynResponse(*slashCommand)
+	// responseData, _ := slashCommand.Respond()
+	// responseJSON, _ := json.Marshal(responseData)
 
 	// TODO: Parse the incoming json and do stuff
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Write(responseJSON)
+	//w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(200)
+	// w.Write("")
+}
+
+func sendAsynResponse(sc slack.SlashCommand) {
+	// could be interesting to do the slashCommand part in a channel?
+	// unnecessary, just for learning/fiddling about.
+	// TODO: handle errors
+	scr, _ := sc.BuildResponse()
+	slack.SendDelayedResponse(sc, scr)
 }
