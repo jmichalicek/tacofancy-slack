@@ -34,26 +34,49 @@ type SlashCommand struct {
     TriggerId string
 }
 
+type AttachmentField struct {
+    Title string
+    Value string
+    Short bool
+}
+
 func (sc *SlashCommand) Respond() (SlashCommandResponse, error) {
     // respond to slash command
 
     // could make this more dynamic, but keeping it simple for now
     // and a Taco interface could make this simpler by not needing different vars for different taco types
+    attachments := make([]map[string]interface{})
+    fields = make([]AttachmentField, 5, 5)
     if sc.Command == "taco" {
         fullTaco, err := tacofancy.GetRandomFullTaco()
-
-        attachments := make([]map[string]string)
         attachments["title"] = fullTaco.Name
         attachments["title_link"] = fullTaco.URL
         attachments["text"] = fullTaco.Description()
+
+        // duplicated - again a Taco interface I think would solve this
+        fields[0] = AttachmentField{Name: "Base Layer", Value: fullTaco.BaseLayer.Name + "link: " + fullTaco.BaseLayer.URL}
+        fields[1] = AttachmentField{Name: "Seasoning", Value: fullTaco.Seasoning.Name + "link: " + fullTaco.Seasoning.URL}
+        fields[2] = AttachmentField{Name: "Mixin", Value: fullTaco.Mixin.Name + "link: " + fullTaco.Mixin.URL}
+        fields[3] = AttachmentField{Name: "Condiment", Value: fullTaco.Condiment.Name + "link: " + fullTaco.Condiment.URL}
+        fields[4] = AttachmentField{Name: "Shell", Value: fullTaco.Shell.Name + "link: " + fullTaco.Shell.URL}
+        attachments["fields"] = fields
+
         return SlashCommandResponse{
             ResponseType: "in_channel", Text: "",
             Attachments: attachments}, nil
     } else if sc.Command == "wildcard" {
         randomTaco, err := tacofancy.GetRandomFullTaco()
-        attachments := make([]map[string]string)
         attachments["title"] = "A Delicious Random Taco"
         attachments["text"] = randomTaco.Description()
+
+        // duplicated - again a Taco interface I think would solve this
+        fields[0] = AttachmentField{Name: "Base Layer", Value: fullTaco.BaseLayer.Name + "link: " + fullTaco.BaseLayer.URL}
+        fields[1] = AttachmentField{Name: "Seasoning", Value: fullTaco.Seasoning.Name + "link: " + fullTaco.Seasoning.URL}
+        fields[2] = AttachmentField{Name: "Mixin", Value: fullTaco.Mixin.Name + "link: " + fullTaco.Mixin.URL}
+        fields[3] = AttachmentField{Name: "Condiment", Value: fullTaco.Condiment.Name + "link: " + fullTaco.Condiment.URL}
+        fields[4] = AttachmentField{Name: "Shell", Value: fullTaco.Shell.Name + "link: " + fullTaco.Shell.URL}
+        attachments["fields"] = fields
+
         return SlashCommandResponse{
             ResponseType: "in_channel", Text: ""
             Attachments: attachments}, nil
@@ -67,5 +90,6 @@ type SlashCommandResponse struct {
     Text string `json:"text"`
     // attachments could get more complex
     // https://api.slack.com/docs/message-attachments
-    Attachments []map[string]string `json:"attachments"`
+    // using interface as the value data type here because it could be strings or a list
+    Attachments []map[string]interface{} `json:"attachments"`
 }
