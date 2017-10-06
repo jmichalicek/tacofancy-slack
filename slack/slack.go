@@ -12,6 +12,15 @@ import (
 )
 
 
+// converts https://raw.githubusercontent.com/sinker/tacofancy/master/condiments/baja_white_sauce.md
+// to https://github.com/sinker/tacofancy/blob/master/condiments/baja_white_sauce.md
+func githubRawUrlToRepo(url string) string {
+	url = strings.Replace(url, "raw.github", "github", -1)
+	url = strings.Replace(url, "master", "blob/master", -1)
+	url = strings.Replace(url, "master//", "master/", -1)
+	return url
+}
+
 func getQuote() string {
 	tacoQuotes := make([]string, 12, 12)
 	tacoQuotes[0] = "Yo quiero chimichangas y chile colorado\nYo tengo el dinero para un steak picado\nLas flautas y tamales, siempre muy bueno\nY el chile relleno"
@@ -107,22 +116,22 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 		// but since Taco interface cannot access the struct properties, here we are... unless the two objects
 		// just become one with some unused parts or I go with a whole bunch of duplicated getters/setters
 		attachments[0]["title"] = fullTaco.Name
-		attachments[0]["title_link"] = fullTaco.URL
+		attachments[0]["title_link"] = githubRawUrlToRepo(fullTaco.URL)
 		attachments[0]["text"] = fullTaco.Description()
 		if fullTaco.BaseLayer.Name != "" {
-			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+fullTaco.BaseLayer.URL+"|"+fullTaco.BaseLayer.Name+">", Short: true}
+			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(fullTaco.BaseLayer.URL)+"|"+fullTaco.BaseLayer.Name+">", Short: true}
 		}
 		if fullTaco.Seasoning.Name != "" {
-			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+fullTaco.Seasoning.URL+"|"+fullTaco.Seasoning.Name+">", Short: true}
+			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(fullTaco.Seasoning.URL)+"|"+fullTaco.Seasoning.Name+">", Short: true}
 		}
 		if fullTaco.Mixin.Name != "" {
-			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+fullTaco.Mixin.URL+"|"+fullTaco.Mixin.Name+">", Short: true}
+			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(fullTaco.Mixin.URL)+"|"+fullTaco.Mixin.Name+">", Short: true}
 		}
 		if fullTaco.Condiment.Name != "" {
-			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+fullTaco.Condiment.URL+"|"+fullTaco.Condiment.Name+">", Short: true}
+			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(fullTaco.Condiment.URL)+"|"+fullTaco.Condiment.Name+">", Short: true}
 		}
 		if fullTaco.Shell.Name != "" {
-			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+fullTaco.Shell.URL+"|"+fullTaco.Shell.Name+">", Short: true}
+			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(fullTaco.Shell.URL)+"|"+fullTaco.Shell.Name+">", Short: true}
 		}
 		attachments[0]["fields"] = fields
 
@@ -135,19 +144,19 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 		attachments[0]["title"] = "A Delicious Random Taco"
 		attachments[0]["text"] = randomTaco.Description()
 		if randomTaco.BaseLayer.Name != "" {
-			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+randomTaco.BaseLayer.URL+"|"+randomTaco.BaseLayer.Name+">", Short: true}
+			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(randomTaco.BaseLayer.URL)+"|"+randomTaco.BaseLayer.Name+">", Short: true}
 		}
 		if randomTaco.Seasoning.Name != "" {
-			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+randomTaco.Seasoning.URL+"|"+randomTaco.Seasoning.Name+">", Short: true}
+			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(randomTaco.Seasoning.URL)+"|"+randomTaco.Seasoning.Name+">", Short: true}
 		}
 		if randomTaco.Mixin.Name != "" {
-			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+randomTaco.Mixin.URL+"|"+randomTaco.Mixin.Name+">", Short: true}
+			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(randomTaco.Mixin.URL)+"|"+randomTaco.Mixin.Name+">", Short: true}
 		}
 		if randomTaco.Condiment.Name != "" {
-			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+randomTaco.Condiment.URL+"|"+randomTaco.Condiment.Name+">", Short: true}
+			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(randomTaco.Condiment.URL)+"|"+randomTaco.Condiment.Name+">", Short: true}
 		}
 		if randomTaco.Shell.Name != "" {
-			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+randomTaco.Shell.URL+"|"+randomTaco.Shell.Name+">", Short: true}
+			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(randomTaco.Shell.URL)+"|"+randomTaco.Shell.Name+">", Short: true}
 		}
 		attachments[0]["fields"] = fields
 
