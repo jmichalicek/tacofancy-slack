@@ -1,7 +1,10 @@
 package tacofancy
 
+// A bit of overengineering going on here just to learn all about
+// go's interfaces, embedded structs, etc. and techniques for working
+// with them.
 
-// An interface implementing a tco
+// An interface implementing a taco
 type Taco interface {
     Description() string
     BaseLayer() *TacoPart
@@ -32,89 +35,69 @@ type TacoPart struct {
 
 // Implements the common parts and methods of a Taco
 type CommonTaco struct {
-    // The actual baselayer
-	baseLayer TacoPart `json:"base_layer"`
-    // The actual baselayer
-	mixin     TacoPart `json:"mixin"`
-    // The actual baselayer
-	condiment TacoPart `json:"condiment"`
-    // The actual baselayer
-	seasoning TacoPart `json:"seasoning"`
-    // The actual baselayer
-	shell     TacoPart `json:"shell"`
+    // To avoid doubling up having to make a private attribute here
+    // and public versions on the JSON version we instead just have
+    // a private attribute for the JSON
+    data randomTacoJSON
 }
 
-func (t CommonTaco) BaseLayer() *TacoPart {
-    return &t.baseLayer
-}
+func (t CommonTaco) BaseLayer() *TacoPart {return &t.data.BaseLayer}
+func (t CommonTaco) Mixin() *TacoPart {return &t.data.Mixin}
+func (t CommonTaco) Condiment() *TacoPart {return &t.data.Condiment}
+func (t CommonTaco) Seasoning() *TacoPart {return &t.data.Seasoning}
+func (t CommonTaco) Shell() *TacoPart {return &t.data.Shell}
 
-func (t CommonTaco) Mixin() *TacoPart {
-    return &t.mixin
-}
+func (t *CommonTaco) SetBaseLayer(baseLayer *TacoPart)  {t.data.BseLayer = *baseLayer}
+func (t *CommonTaco) SetMixin(mixin *TacoPart)  {t.data.Mixin = *mixin}
+func (t *CommonTaco) SetCondiment(condiment *TacoPart)  {t.data.Condiment = *condiment}
+func (t *CommonTaco) SetSeasoning(seasoning *TacoPart)  {t.data.Seasoning = *seasoning}
+func (t *CommonTaco) SetShell(shell *TacoPart)  {t.data.Shell = shell}
 
-func (t CommonTaco) Condiment() *TacoPart {
-    return &t.condiment
-}
-
-func (t CommonTaco) Seasoning() *TacoPart {
-    return &t.seasoning
-}
-
-func (t CommonTaco) Shell() *TacoPart {
-    return &t.shell
-}
-
-func (t *CommonTaco) SetBaseLayer(baseLayer *TacoPart)  {
-    t.baseLayer = *baseLayer
-}
-
-func (t *CommonTaco) SetMixin(mixin *TacoPart)  {
-    t.mixin = *mixin
-}
-
-func (t *CommonTaco) SetCondiment(condiment *TacoPart)  {
-    t.condiment = *condiment
-}
-
-func (t *CommonTaco) SetSeasoning(seasoning *TacoPart)  {
-    t.seasoning = *seasoning
-}
-
-func (t *CommonTaco) SetShell(shell *TacoPart)  {
-    t.shell = shell
+// Make a new RandomTaco object
+func NewRandomTaco() RandomTaco {
+    // pass in the data here
+    data = randomTacoJSON{}
+    return RandomTaco{data: data}
 }
 
 // Implementation of a Taco made of random parts
 // This has a BaseLayer, Mixin, Condiment, Seasoning, and Shell
 // TacoPart
 type RandomTaco struct {
+    // this one is marshallable
     CommonTaco
 }
 
 // Returns a description of the taco made up from the names of the parts
 func (t *RandomTaco) Description() string {
-
 	// shell names are inconsistent, but roll with this for now
 	_, desc := t.baseLayer.Name+" seasoned with "+t.seasoning.Name+" with "+t.mixin.Name+" and "+
 		t.condiment.Name+" in "+t.shell.Name+"."
 	return desc
 }
 
-func (t *RandomTaco) UnmarshalJSON() data []byte, error {
-    data []byte
-	doc := RandomTacoJSON{
-        BaseLayer: t.baseLayer, Mixin: t.mixin, Condiment: t.condiment,
-        Seasoning: t.seasoning, Shell: t.shell}
-	err := json.Unmarshal(data, doc)
+// Implements json.Unmarshaler
+// https://golang.org/pkg/encoding/json/#RawMessage.UnmarshalJSON
+// https://golang.org/pkg/encoding/json/#Unmarshal calls this method
+// Technique taken from https://play.golang.org/p/rQu1W5RXTy linked from
+// http://grokbase.com/p/gg/golang-nuts/143vtcxz29/go-nuts-patterns-for-json-encoding-unexported-fields
+func (t *RandomTaco) UnmarshalJSON(data []byte) error {
+	doc := randomTacoJSON{}
+	err := json.Unmarshal(data, &t.doc)
 	if err != nil {
 		return err
 	}
 
-	return data
+	return nil
 }
 
-// Provides a struct for marshaling and unmarshaling a RandomTaco
-type RandomTacoJSON struct {
+func (t *RandomTaco) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.data)
+}
+
+// Provides a struct for marshaling and unmarshaling a RandomTaco data
+// while leaving its fields private so that it is easier to use with Taco interface
+type randomTacoJSON struct {
     BaseLayer    TacoPart `json:"base_layer"`
     // The mixin
     Mixin        TacoPart `json:"mixin"`
@@ -125,10 +108,6 @@ type RandomTacoJSON struct {
     Shell        TacoPart `json:"shell"`
 }
 
-// Marshal's to a RandomTaco
-func (t *RandomTacoJSON) MarshalJSON() ([]byte, error) {
-	return json.Marshal(t)
-}
 
 // Implementation of a Taco from a full recipe
 type FullTaco struct {
@@ -187,23 +166,27 @@ func (t *FullTaco) Description() string {
 	return desc
 }
 
-// Unmarshall a FullTaco to json []byte
-func (t *FullTaco) UnmarshalJSON() data []byte, error {
-    data []byte
-	doc := FullTacoJSON{
-        Name: t.Name, URL: t.URL, Recipe: t.Recipe, Slug: t.Slug,
-        BaseLayer: t.baseLayer, Mixin: t.mixin, Condiment: t.condiment,
-        Seasoning: t.seasoning, Shell: t.shell}
-	err := json.Unmarshal(data, doc)
+// Implements json.Unmarshaler
+// https://golang.org/pkg/encoding/json/#RawMessage.UnmarshalJSON
+// https://golang.org/pkg/encoding/json/#Unmarshal calls this method
+// Technique taken from https://play.golang.org/p/rQu1W5RXTy linked from
+// http://grokbase.com/p/gg/golang-nuts/143vtcxz29/go-nuts-patterns-for-json-encoding-unexported-fields
+func (t *FullTaco) UnmarshalJSON(data []byte) error {
+	doc := fullTacoJSON{}
+	err := json.Unmarshal(data, &t.doc)
 	if err != nil {
 		return err
 	}
 
-	return data
+	return nil
+}
+
+func (t *FullTaco) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.data)
 }
 
 // Provides a struct for marshaling and unmarshaling a FullTaco
-type FullTacoJSON struct {
+type fullTacoJSON struct {
     Name   string `json:"name"`
     // The URL to the recipe
 	URL    string `json:"url"`
@@ -212,7 +195,7 @@ type FullTacoJSON struct {
     // Slug part of the URL
 	Slug   string `json:"slug"`
 
-    RandomTacoJSON
+    randomTacoJSON
     // full taco response doubles up on these URLs on data from
     // the RandomTaco
     // URL to the baselayer for the taco
