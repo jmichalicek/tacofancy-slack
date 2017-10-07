@@ -53,6 +53,8 @@ func (t *RandomTaco) Description() string {
 // getters is a pain.  End up implementing getters and setters for each struct
 // MarshalJSON and UnmarshalJSON for each struct, etc.  It would be less work
 // to just have Taco and have some extra fields.
+// Experimented with BaseTaco embedded struct which had the getters and setters
+// May try it again.
 type FullTaco struct {
     // The name of the taco
 	Name   string `json:"name"`
