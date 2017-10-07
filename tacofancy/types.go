@@ -41,7 +41,7 @@ type RandomTaco struct {
 func (t *RandomTaco) Description() string {
 
 	// shell names are inconsistent, but roll with this for now
-	_, desc := t.BaseLayer.Name+" seasoned with ", t.Seasoning.Name+" with "+t.Mixin.Name+" and "+
+	desc := t.BaseLayer.Name+" seasoned with "+t.Seasoning.Name+" with "+t.Mixin.Name+" and "+
 		t.Condiment.Name+" in "+t.Shell.Name+"."
 	return desc
 }
@@ -105,10 +105,10 @@ func (t *FullTaco) Description() string {
 	}
 
 	// full tacos do not seem to have a shell usually and shell names are
-	// incosistent
-	// if t.Shell.Name {
-	// 	_, desc = desc + " in " + t.Shell.Name + "."
-	// }
+	// inconsistent
+	 if t.Shell.Name {
+	 	desc = desc + " in " + t.Shell.Name + "."
+	 }
 
 	return desc
 }
