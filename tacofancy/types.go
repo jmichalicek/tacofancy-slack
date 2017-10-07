@@ -2,6 +2,7 @@ package tacofancy
 
 
 // An interface implementing a tco
+// I'm not even reall using this
 type Taco interface {
     Description() string
 }
@@ -47,6 +48,11 @@ func (t *RandomTaco) Description() string {
 }
 
 // Implementation of a Taco from a full recipe
+// Fields duplicated from RandomTaco because de-duplicating those plus
+// allowing for json marshal/unmarshal plus using idiomatically named
+// getters is a pain.  End up implementing getters and setters for each struct
+// MarshalJSON and UnmarshalJSON for each struct, etc.  It would be less work
+// to just have Taco and have some extra fields.
 type FullTaco struct {
     // The name of the taco
 	Name   string `json:"name"`
