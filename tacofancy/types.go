@@ -1,10 +1,9 @@
 package tacofancy
 
-
 // An interface implementing a tco
 // I'm not even reall using this
 type Taco interface {
-    Description() string
+	Description() string
 }
 
 // see https://taco-randomizer.herokuapp.com/random/ for a random example
@@ -14,10 +13,10 @@ type Taco interface {
 // Implements one igredient or part from a tacofancy taco
 // A TacoPart is made up of a Name, URL, Slug, and Recipe
 type TacoPart struct {
-	Name   string `json:"name"`
-	URL    string `json:"url"`
-	Slug   string `json:"slug"`
-    // Recipe instructions on how to make this TacoPart
+	Name string `json:"name"`
+	URL  string `json:"url"`
+	Slug string `json:"slug"`
+	// Recipe instructions on how to make this TacoPart
 	Recipe string `json:"recipe"`
 }
 
@@ -25,29 +24,29 @@ type TacoPart struct {
 // This has a BaseLayer, Mixin, Condiment, Seasoning, and Shell
 // TacoPart
 type BaseTaco struct {
-    // The actual baselayer
+	// The actual baselayer
 	BaseLayer TacoPart `json:"base_layer"`
-    // The actual baselayer
-	Mixin     TacoPart `json:"mixin"`
-    // The actual baselayer
+	// The actual baselayer
+	Mixin TacoPart `json:"mixin"`
+	// The actual baselayer
 	Condiment TacoPart `json:"condiment"`
-    // The actual baselayer
+	// The actual baselayer
 	Seasoning TacoPart `json:"seasoning"`
-    // The actual baselayer
-	Shell     TacoPart `json:"shell"`
+	// The actual baselayer
+	Shell TacoPart `json:"shell"`
 }
 
 // A taco which is not from a recipe, but from random selection of parts
 type RandomTaco struct {
-    BaseTaco
+	BaseTaco
 }
 
 // Returns a description of the taco made up from the names of the parts
 func (t *RandomTaco) Description() string {
 
 	// shell names are inconsistent, but roll with this for now
-	desc := t.BaseLayer.Name+" seasoned with "+t.Seasoning.Name+" with "+t.Mixin.Name+" and "+
-		t.Condiment.Name+" in "+t.Shell.Name+"."
+	desc := t.BaseLayer.Name + " seasoned with " + t.Seasoning.Name + " with " + t.Mixin.Name + " and " +
+		t.Condiment.Name + " in " + t.Shell.Name + "."
 	return desc
 }
 
@@ -60,28 +59,27 @@ func (t *RandomTaco) Description() string {
 // Experimented with BaseTaco embedded struct which had the getters and setters
 // May try it again.
 type FullTaco struct {
-    BaseTaco
-    // The name of the taco
-	Name   string `json:"name"`
-    // The URL to the recipe
-	URL    string `json:"url"`
-    // Recipe instructions on how to make this Taco
+	BaseTaco
+	// The name of the taco
+	Name string `json:"name"`
+	// The URL to the recipe
+	URL string `json:"url"`
+	// Recipe instructions on how to make this Taco
 	Recipe string `json:"recipe"`
-    // Slug part of the URL
-	Slug   string `json:"slug"`
+	// Slug part of the URL
+	Slug string `json:"slug"`
 
 	// full taco api doubles up url stuff for some reaosn
-
-    // URL to the baselayer for the taco
-	BaseLayerURL string   `json:"base_layer_url"`
-    // URL to the mixin of the taco
-	MixinURL     string   `json:"mixin_url"`
-    // URL to the condiment of the taco
-	CondimentURL string   `json:"condiment_url"`
-    // URL to the seasoning of the taco
-	SeasoningURL string   `json:"seasoning_url"`
-    // URL to the shell of the taco
-	ShellURL     string   `json:"shell_url"`
+	// URL to the baselayer for the taco
+	BaseLayerURL string `json:"base_layer_url"`
+	// URL to the mixin of the taco
+	MixinURL string `json:"mixin_url"`
+	// URL to the condiment of the taco
+	CondimentURL string `json:"condiment_url"`
+	// URL to the seasoning of the taco
+	SeasoningURL string `json:"seasoning_url"`
+	// URL to the shell of the taco
+	ShellURL string `json:"shell_url"`
 }
 
 // Returns a description of the taco made up from the names of the parts
@@ -105,9 +103,9 @@ func (t *FullTaco) Description() string {
 
 	// full tacos do not seem to have a shell usually and shell names are
 	// inconsistent
-	 if t.Shell.Name != "" {
-	 	desc = desc + " in " + t.Shell.Name + "."
-	 }
+	if t.Shell.Name != "" {
+		desc = desc + " in " + t.Shell.Name + "."
+	}
 
 	return desc
 }
