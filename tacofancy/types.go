@@ -24,8 +24,7 @@ type TacoPart struct {
 // Implementation of a Taco made of random parts
 // This has a BaseLayer, Mixin, Condiment, Seasoning, and Shell
 // TacoPart
-type RandomTaco struct {
-    Name   string `json:"name"`
+type BaseTaco struct {
     // The actual baselayer
 	BaseLayer TacoPart `json:"base_layer"`
     // The actual baselayer
@@ -36,6 +35,11 @@ type RandomTaco struct {
 	Seasoning TacoPart `json:"seasoning"`
     // The actual baselayer
 	Shell     TacoPart `json:"shell"`
+}
+
+// A taco which is not from a recipe, but from random selection of parts
+type RandomTaco struct {
+    BaseTaco
 }
 
 // Returns a description of the taco made up from the names of the parts
@@ -56,6 +60,7 @@ func (t *RandomTaco) Description() string {
 // Experimented with BaseTaco embedded struct which had the getters and setters
 // May try it again.
 type FullTaco struct {
+    BaseTaco
     // The name of the taco
 	Name   string `json:"name"`
     // The URL to the recipe
@@ -69,28 +74,14 @@ type FullTaco struct {
 
     // URL to the baselayer for the taco
 	BaseLayerURL string   `json:"base_layer_url"`
-    // The actual baselayer
-	BaseLayer    TacoPart `json:"base_layer"`
-
     // URL to the mixin of the taco
 	MixinURL     string   `json:"mixin_url"`
-    // The mixin
-	Mixin        TacoPart `json:"mixin"`
-
     // URL to the condiment of the taco
 	CondimentURL string   `json:"condiment_url"`
-    // The condiment
-	Condiment    TacoPart `json:"condiment"`
-
     // URL to the seasoning of the taco
 	SeasoningURL string   `json:"seasoning_url"`
-    // The seasoning
-	Seasoning    TacoPart `json:"seasoning"`
-
     // URL to the shell of the taco
 	ShellURL     string   `json:"shell_url"`
-    // The shell
-	Shell        TacoPart `json:"shell"`
 }
 
 // Returns a description of the taco made up from the names of the parts
