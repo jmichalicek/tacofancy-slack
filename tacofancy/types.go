@@ -114,7 +114,7 @@ func (t *FullTaco) Description() string {
 
 	// full tacos do not seem to have a shell usually and shell names are
 	// inconsistent
-	 if t.Shell.Name {
+	 if t.Shell.Name != "" {
 	 	desc = desc + " in " + t.Shell.Name + "."
 	 }
 
