@@ -2,10 +2,32 @@ package tacofancy
 
 import "encoding/json"
 
+// Some serious over-engineering is going on here for the sake of learning Go.
+// There is a Taco interface, BaseTaco which implements it,
+// RandomTaco and FullTaco which embed BaseTaco so that getters/setters/attributes
+// do not have to be duplicated.
+// And then baseTacoJSON and fullTacoJSON which have exported attributes, but
+// those structs themselves are not exported which allows FullTaco and
+// RandomTaco to Marshal and Unmarshal JSON while having all unexported
+// member attributes which are ignored by json.Marshal() and json.Unmarhsal()
+// This mess with the *JSON structs duplicating fields is perhaps my least
+// favorite thing so far with Go's take on OOP
+
 // An interface implementing a tco
-// I'm not even reall using this
 type Taco interface {
 	Description() string
+	BaseLayer() TacoPart
+	Mixin() TacoPart
+	Condiment() TacoPart
+	Seasoning() TacoPart
+	Shell() TacoPart
+
+	// Should these take pointers?
+	SetBaseLayer(TacoPart)
+	SetMixin(TacoPart)
+	SetCondiment(TacoPart)
+	SetShell(TacoPart)
+	SetSeasoning(TacoPart)
 }
 
 // see https://taco-randomizer.herokuapp.com/random/ for a random example
@@ -88,6 +110,8 @@ func (t *BaseTaco) Mixin() TacoPart          { return t.mixin }
 func (t *BaseTaco) Condiment() TacoPart      { return t.condiment }
 func (t *BaseTaco) Seasoning() TacoPart      { return t.seasoning }
 func (t *BaseTaco) Shell() TacoPart          { return t.shell }
+// Should these take pointers?  I assume that the struct would need to use
+// pointers for that to matter?
 func (t *BaseTaco) SetBaseLayer(bl TacoPart) { t.baseLayer = bl }
 func (t *BaseTaco) SetMixin(m TacoPart)      { t.mixin = m }
 func (t *BaseTaco) SetCondiment(c TacoPart)  { t.condiment = c }
