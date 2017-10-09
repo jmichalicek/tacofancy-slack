@@ -30,7 +30,7 @@ func main() {
     flag.Parse()
     if *randomTaco {
         // showRandomTacoParts(*showJSON, *showDesc)
-        taco, err := tacofancy.GetRandomFullTaco()
+        taco, err := tacofancy.GetRandomTacoParts()
         if err != nil {
             fmt.Println(err)
             return
