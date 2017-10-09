@@ -90,15 +90,51 @@ func VerifyToken(token string) bool {
 	return token == os.Getenv("TACOFANCY_VERIFICATION_TOKEN")
 }
 
-// Builds a SlashCommandResponse to use for responding to a Slack SlashCommand
-func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
-	// respond to slash command
-
-	// could make this more dynamic, but keeping it simple for now
-	// and a Taco interface could make this simpler by not needing different vars for different taco types
+// Functional approach like this?
+// or should I take a more C-like approach and pass in attachments and modify it
+func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	attachments := make([]map[string]interface{}, 1)
 	attachments[0] = make(map[string]interface{})
 	fields := make([]AttachmentField, 5, 5)
+
+	// FullTaco specific
+	//attachments[0]["title"] = taco.Name()
+	//attachments[0]["title_link"] = githubRawUrlToRepo(taco.URL)
+	attachments[0]["text"] = taco.Description()
+	baseLayer := taco.BaseLayer()
+	if baseLayer.Name != "" {
+		fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(baseLayer.URL)+"|"+baseLayer.Name+">", Short: true}
+	}
+	if taco.Seasoning().Name != "" {
+		fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(taco.Seasoning().URL)+"|"+taco.Seasoning().Name+">", Short: true}
+	}
+	if taco.Mixin().Name != "" {
+		fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(taco.Mixin().URL)+"|"+taco.Mixin().Name+">", Short: true}
+	}
+	if taco.Condiment().Name != "" {
+		fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(taco.Condiment().URL)+"|"+taco.Condiment().Name+">", Short: true}
+	}
+	if taco.Shell().Name != "" {
+		fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(taco.Shell().URL)+"|"+taco.Shell().Name+">", Short: true}
+	}
+	attachments[0]["fields"] = fields
+
+	return attachments
+}
+
+// Builds a SlashCommandResponse to use for responding to a Slack SlashCommand
+// TODO:  make a responder interface and pass that in?  then t.Respond() could
+// be called?  Not sure since that moves the slack specific logic out of here
+// but could almost certainly be far more useful for a more general slack framework
+func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
+	// respond to slash command
+
+	var attachments []map[string]interface{}
+	// could make this more dynamic, but keeping it simple for now
+	// and a Taco interface could make this simpler by not needing different vars for different taco types
+	// attachments := make([]map[string]interface{}, 1)
+	// attachments[0] = make(map[string]interface{})
+	// fields := make([]AttachmentField, 5, 5)
 
 	// TODO: split these out into separate handlers?
 	parts := strings.Split(sc.Text, " ")
@@ -112,28 +148,31 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 		if err != nil {
 			return SlashCommandResponse{}, err
 		}
+
+		// TODO: or should I pass a reference, OO style?  I am not modifying it.
+		attachments = BuildAttachments(&fullTaco)
 		// A bunch of duplicated stuff which it seems like using Taco interface would solve
 		// but since Taco interface cannot access the struct properties, here we are... unless the two objects
 		// just become one with some unused parts or I go with a whole bunch of duplicated getters/setters
-		attachments[0]["title"] = fullTaco.Name
-		attachments[0]["title_link"] = githubRawUrlToRepo(fullTaco.URL)
-		attachments[0]["text"] = fullTaco.Description()
-		if fullTaco.BaseLayer.Name != "" {
-			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(fullTaco.BaseLayer.URL)+"|"+fullTaco.BaseLayer.Name+">", Short: true}
-		}
-		if fullTaco.Seasoning.Name != "" {
-			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(fullTaco.Seasoning.URL)+"|"+fullTaco.Seasoning.Name+">", Short: true}
-		}
-		if fullTaco.Mixin.Name != "" {
-			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(fullTaco.Mixin.URL)+"|"+fullTaco.Mixin.Name+">", Short: true}
-		}
-		if fullTaco.Condiment.Name != "" {
-			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(fullTaco.Condiment.URL)+"|"+fullTaco.Condiment.Name+">", Short: true}
-		}
-		if fullTaco.Shell.Name != "" {
-			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(fullTaco.Shell.URL)+"|"+fullTaco.Shell.Name+">", Short: true}
-		}
-		attachments[0]["fields"] = fields
+		attachments[0]["title"] = fullTaco.Name()
+		attachments[0]["title_link"] = githubRawUrlToRepo(fullTaco.URL())
+		// attachments[0]["text"] = fullTaco.Description()
+		// if fullTaco.BaseLayer.Name != "" {
+		// 	fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(fullTaco.BaseLayer.URL)+"|"+fullTaco.BaseLayer.Name+">", Short: true}
+		// }
+		// if fullTaco.Seasoning.Name != "" {
+		// 	fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(fullTaco.Seasoning.URL)+"|"+fullTaco.Seasoning.Name+">", Short: true}
+		// }
+		// if fullTaco.Mixin.Name != "" {
+		// 	fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(fullTaco.Mixin.URL)+"|"+fullTaco.Mixin.Name+">", Short: true}
+		// }
+		// if fullTaco.Condiment.Name != "" {
+		// 	fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(fullTaco.Condiment.URL)+"|"+fullTaco.Condiment.Name+">", Short: true}
+		// }
+		// if fullTaco.Shell.Name != "" {
+		// 	fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(fullTaco.Shell.URL)+"|"+fullTaco.Shell.Name+">", Short: true}
+		// }
+		// attachments[0]["fields"] = fields
 
 		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
 	} else if commandType == "loco" {
@@ -141,24 +180,26 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 		if err != nil {
 			return SlashCommandResponse{}, err
 		}
+
+		attachments = BuildAttachments(&randomTaco)
 		attachments[0]["title"] = "A Delicious Random Taco"
-		attachments[0]["text"] = randomTaco.Description()
-		if randomTaco.BaseLayer.Name != "" {
-			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(randomTaco.BaseLayer.URL)+"|"+randomTaco.BaseLayer.Name+">", Short: true}
-		}
-		if randomTaco.Seasoning.Name != "" {
-			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(randomTaco.Seasoning.URL)+"|"+randomTaco.Seasoning.Name+">", Short: true}
-		}
-		if randomTaco.Mixin.Name != "" {
-			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(randomTaco.Mixin.URL)+"|"+randomTaco.Mixin.Name+">", Short: true}
-		}
-		if randomTaco.Condiment.Name != "" {
-			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(randomTaco.Condiment.URL)+"|"+randomTaco.Condiment.Name+">", Short: true}
-		}
-		if randomTaco.Shell.Name != "" {
-			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(randomTaco.Shell.URL)+"|"+randomTaco.Shell.Name+">", Short: true}
-		}
-		attachments[0]["fields"] = fields
+		// attachments[0]["text"] = randomTaco.Description()
+		// if randomTaco.BaseLayer.Name != "" {
+		// 	fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(randomTaco.BaseLayer.URL)+"|"+randomTaco.BaseLayer.Name+">", Short: true}
+		// }
+		// if randomTaco.Seasoning.Name != "" {
+		// 	fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(randomTaco.Seasoning.URL)+"|"+randomTaco.Seasoning.Name+">", Short: true}
+		// }
+		// if randomTaco.Mixin.Name != "" {
+		// 	fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(randomTaco.Mixin.URL)+"|"+randomTaco.Mixin.Name+">", Short: true}
+		// }
+		// if randomTaco.Condiment.Name != "" {
+		// 	fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(randomTaco.Condiment.URL)+"|"+randomTaco.Condiment.Name+">", Short: true}
+		// }
+		// if randomTaco.Shell.Name != "" {
+		// 	fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(randomTaco.Shell.URL)+"|"+randomTaco.Shell.Name+">", Short: true}
+		// }
+		// attachments[0]["fields"] = fields
 
 		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
 	} else if commandType == "grande" {
