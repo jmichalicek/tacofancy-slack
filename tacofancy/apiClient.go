@@ -11,6 +11,8 @@ import (
 const baseUrl string = "https://taco-randomizer.herokuapp.com/"
 const randomPath string = "random/"
 
+var BaseUrl = baseUrl
+
 // default client has no timeout, so we make our own with a timeout
 var httpClient = &http.Client{
 	Timeout: time.Second * 10,

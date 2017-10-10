@@ -92,6 +92,7 @@ func VerifyToken(token string) bool {
 
 // Functional approach like this?
 // or should I take a more C-like approach and pass in attachments and modify it
+// or should this actually be a method of SlashCommand?
 func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	attachments := make([]map[string]interface{}, 1)
 	attachments[0] = make(map[string]interface{})
