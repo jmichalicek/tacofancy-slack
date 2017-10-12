@@ -3,7 +3,6 @@ package webhooks
 // should I make a webhooks/slack package instead?
 
 import (
-	// "encoding/json"
 	"github.com/jmichalicek/tacofancy-slack/slack"
 	"net/http"
 )
@@ -17,18 +16,14 @@ func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 	if slack.VerifyToken(slashCommand.Token) {
 		// could move some of this to the SlashCommand
-		go sendAsynResponse(slashCommand)
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(400)
+		// or should this use sc.RespondAsync()?
+		scr, err := sc.BuildResponse()
+		if err == nil {
+			// //TODO: how to test this?
+			go slack.SendDelayedResponse(sc.URL(), scr)
+			w.WriteHeader(200)
+			return
+		}
 	}
-
-}
-
-func sendAsynResponse(sc slack.SlashCommand) {
-	// could be interesting to do the slashCommand part in a channel?
-	// unnecessary, just for learning/fiddling about.
-	// TODO: handle errors
-	scr, _ := sc.BuildResponse()
-	slack.SendDelayedResponse(sc, scr)
+	w.WriteHeader(400)
 }

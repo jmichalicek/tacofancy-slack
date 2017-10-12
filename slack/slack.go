@@ -188,7 +188,7 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 func (sc *SlashCommand) RespondAsync(ch chan error) {
 	defer close(ch)
 	scr, _ := sc.BuildResponse()
-	ch <- SendDelayedResponse(*sc, scr)
+	ch <- SendDelayedResponse(sc.URL(), scr)
 }
 
 type SlashCommandResponse struct {
@@ -202,12 +202,10 @@ type SlashCommandResponse struct {
 
 // Sends the provided SlashCommandResponse to the provided SlashCommand
 // by Marshalling the SlashCommandResponse and making an HTTP POST to the SlashCommand.ResponseURL
-func SendDelayedResponse(sc SlashCommand, scr SlashCommandResponse) error {
+func SendDelayedResponse(url string, scr SlashCommandResponse) error {
 	var httpClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	url := sc.ResponseURL
-	//commandResponse, _ := sc.BuildResponse()
 	commandResponseJson, err := json.Marshal(scr)
 	if err != nil {
 		return err
