@@ -105,11 +105,12 @@ func (t *BaseTaco) Description() string {
 }
 
 // Should these return pointers?
-func (t *BaseTaco) BaseLayer() TacoPart      { return t.baseLayer }
-func (t *BaseTaco) Mixin() TacoPart          { return t.mixin }
-func (t *BaseTaco) Condiment() TacoPart      { return t.condiment }
-func (t *BaseTaco) Seasoning() TacoPart      { return t.seasoning }
-func (t *BaseTaco) Shell() TacoPart          { return t.shell }
+func (t *BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
+func (t *BaseTaco) Mixin() TacoPart     { return t.mixin }
+func (t *BaseTaco) Condiment() TacoPart { return t.condiment }
+func (t *BaseTaco) Seasoning() TacoPart { return t.seasoning }
+func (t *BaseTaco) Shell() TacoPart     { return t.shell }
+
 // Should these take pointers?  I assume that the struct would need to use
 // pointers for that to matter?
 func (t *BaseTaco) SetBaseLayer(bl TacoPart) { t.baseLayer = bl }
