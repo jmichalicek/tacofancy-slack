@@ -18,12 +18,15 @@ var httpClient = &http.Client{
 	Timeout: time.Second * 10,
 }
 
-func GetRandomTacoParts() (RandomTaco, error) {
+func GetRandomTacoParts(client *http.Client) (RandomTaco, error) {
 	// random base layer, mixin, condiment, seasoning, and shell
+    if client == nil {
+        client = httpClient
+    }
 	var tacoUrl = baseUrl + randomPath
 	var taco = RandomTaco{}
 
-	r, err := httpClient.Get(tacoUrl)
+	r, err := client.Get(tacoUrl)
 	if err != nil {
 		return taco, err
 	}
@@ -36,12 +39,15 @@ func GetRandomTacoParts() (RandomTaco, error) {
 	return taco, err
 }
 
-func GetRandomFullTaco() (FullTaco, error) {
+func GetRandomFullTaco(client *http.Client) (FullTaco, error) {
+    if client == nil {
+        client = httpClient
+    }
 	// there's probably a built in url path  manipulation thing in Go, but I am being lazy for now
 	var tacoUrl = baseUrl + randomPath + "?full-taco=true"
 	var taco = FullTaco{}
 
-	r, err := httpClient.Get(tacoUrl)
+	r, err := client.Get(tacoUrl)
 	if err != nil {
 		return taco, err
 	}
