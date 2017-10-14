@@ -73,6 +73,17 @@ type SlashCommand struct {
 	Text           string
 	ResponseURL    string
 	TriggerId      string
+
+	// I do not really feel like this belongs here, but for the sake of easy testability
+	// it will live here for now.  In a more complex app perhaps there would be a
+	// TacoFancySlashCommand where this would feel more appropriate
+	// or perhaps BuildResponse() should not be a SlashCommand method and I should pass
+	// the SlashCommand and client into NewTacoRecipeResponse() etc then a factory method
+	// which is basiclaly what BuildResponse() is.  The problem here is that I feel like
+	// no matter what, at some point, I am configuring a tacofancy.Client and passing it inot
+	// a function, not because I know the actual code needs it, but because the code "might" need it
+	// and test cases need some way to pass it in for those.
+	TacofancyClient	tacofancy.Client
 }
 
 // A slashcommand response attachment
@@ -125,8 +136,8 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 
 // TODO: take the taco as an arg?  Then these become super easy to test since there is no api call
 // Returns a SlashCommandResponse for the command `/taco recipe`
-func NewTacoRecipeResponse() (SlashCommandResponse, error) {
-	fullTaco, err := tacofancy.GetRandomFullTaco()
+func NewTacoRecipeResponse(client tacofancy.Client) (SlashCommandResponse, error) {
+	fullTaco, err := client.GetRandomFullTaco()
 	if err != nil {
 		return SlashCommandResponse{}, err
 	}
@@ -142,18 +153,22 @@ func NewTacoRecipeResponse() (SlashCommandResponse, error) {
 }
 
 // Returns a SlashCommandResponse for the command `/taco loco`
-func NewTacoLocoResponse() (SlashCommandResponse, error) {
-	randomTaco, err := tacofancy.GetRandomTacoParts()
+func NewTacoLocoResponse(client tacofancy.Client) (SlashCommandResponse, error) {
+	randomTaco, err := client.GetRandomTacoParts()
 	if err != nil {
 		return SlashCommandResponse{}, err
 	}
 
-	attachments = BuildAttachments(&randomTaco)
+	attachments := BuildAttachments(&randomTaco)
 	attachments[0]["title"] = "A Delicious Random Taco"
 	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
 }
 
 func NewTacoGrandeResponse() (SlashCommandResponse, error) {
+	attachments := make([]map[string]interface{}, 1)
+	attachments[0] = make(map[string]interface{})
+	// fields := make([]AttachmentField, 5, 5)
+
 	attachments[0]["title"] = "Taco Grande"
 	attachments[0]["title_link"] = "https://www.youtube.com/watch?v=mX18yNwqnMg"
 	attachments[0]["text"] = getQuote()
@@ -174,9 +189,9 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 	}
 
 	if commandType == "recipe" {
-		return NewTacoRecipeResponse()
+		return NewTacoRecipeResponse(sc.TacofancyClient)
 	} else if commandType == "loco" {
-		return NewTacoLocoResponse()
+		return NewTacoLocoResponse(sc.TacofancyClient)
 	} else if commandType == "grande" {
 		return NewTacoGrandeResponse()
 	}
@@ -188,7 +203,7 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 func (sc *SlashCommand) RespondAsync(ch chan error) {
 	defer close(ch)
 	scr, _ := sc.BuildResponse()
-	ch <- SendDelayedResponse(sc.URL(), scr)
+	ch <- SendDelayedResponse(sc.ResponseURL, scr)
 }
 
 type SlashCommandResponse struct {

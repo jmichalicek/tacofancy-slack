@@ -28,9 +28,12 @@ func main() {
     randomTaco := flag.Bool(
         "random", false, "Show a random selection of base layer, seasoning, mixin, condiment, and shell")
     flag.Parse()
+
+		// default url and http.Client
+    client := tacoFancy.NewClient("", nil)
     if *randomTaco {
         // showRandomTacoParts(*showJSON, *showDesc)
-        taco, err := tacofancy.GetRandomTacoParts()
+        taco, err := client.GetRandomTacoParts()
         if err != nil {
             fmt.Println(err)
             return
@@ -38,7 +41,7 @@ func main() {
         showTaco(&taco, *showJSON, *showDesc)
     } else {
         //showFullRandomTaco(*showJSON, *showDesc)
-        taco, err := tacofancy.GetRandomFullTaco()
+        taco, err := client.GetRandomFullTaco()
         if err != nil {
             fmt.Println(err)
             return
