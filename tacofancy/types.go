@@ -1,6 +1,8 @@
 package tacofancy
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Some serious over-engineering is going on here for the sake of learning Go.
 // There is a Taco interface, BaseTaco which implements it,
@@ -168,13 +170,13 @@ func (t *RandomTaco) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rtj)
 }
 
-
 // Create a new randomly generated taco
 // These tacos are made of random parts as returned from the TacoFancy API.
-func NewFullTaco(name, url, recipie, slug string, baseLayer, mixin, condiment, seasoning, shell TacoPart, ) FullTaco {
+func NewFullTaco(name, url, recipie, slug string, baseLayer, mixin, condiment, seasoning, shell TacoPart) FullTaco {
 	return FullTaco{
 		BaseTaco: BaseTaco{baseLayer: baseLayer, mixin: mixin, condiment: condiment, seasoning: seasoning, shell: shell}}
 }
+
 // Implementation of a Taco from a full recipe
 // These tacos come from the TacoFancy API as a complete recipe with a name, url, slug, etc.
 type FullTaco struct {
@@ -204,15 +206,15 @@ type FullTaco struct {
 }
 
 // Ignoring the RecipeURL, etc. for now
-func (t FullTaco) Name() string       { return t.name }
-func (t FullTaco) URL() string        { return t.url }
-func (t FullTaco) Recipe() string     { return t.recipe }
-func (t FullTaco) Slug() string       { return t.slug }
+func (t FullTaco) Name() string         { return t.name }
+func (t FullTaco) URL() string          { return t.url }
+func (t FullTaco) Recipe() string       { return t.recipe }
+func (t FullTaco) Slug() string         { return t.slug }
 func (t FullTaco) BaseLayerURL() string { return t.baseLayerURL }
-func (t FullTaco) MixinURL() string { return t.mixinURL }
+func (t FullTaco) MixinURL() string     { return t.mixinURL }
 func (t FullTaco) CondimentURL() string { return t.condimentURL }
 func (t FullTaco) SeasoningURL() string { return t.seasoningURL }
-func (t FullTaco) ShellURL() string { return t.shellURL }
+func (t FullTaco) ShellURL() string     { return t.shellURL }
 
 // Returns a description of the taco made up from the names of the parts
 func (t FullTaco) Description() string {
