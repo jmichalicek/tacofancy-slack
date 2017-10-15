@@ -30,7 +30,7 @@ func main() {
     flag.Parse()
 
 		// default url and http.Client
-    client := tacoFancy.NewClient("", nil)
+    client := tacofancy.NewClient("", nil)
     if *randomTaco {
         // showRandomTacoParts(*showJSON, *showDesc)
         taco, err := client.GetRandomTacoParts()
