@@ -68,7 +68,7 @@ func TestSlashCommandBuildResponseForTacoLoco(t *testing.T) {
 	}
 
 	json.Unmarshal([]byte(randomApiResponse), &randomApiData)
-	attachments := BuildAttachments(&randomApiData) // from slack.go
+	attachments := BuildAttachments(randomApiData) // from slack.go
 	attachments[0]["title"] = "A Delicious Random Taco"
 	expectedResponse := SlashCommandResponse{
 		ResponseType: "in_channel",
@@ -96,7 +96,7 @@ func TestBuildAttachments(t *testing.T) {
 	seasoning := tacofancy.NewTacoPart("Seasoning", "https://example.org/seasoning/", "seasoning", "Mix up some seasonings")
 	shell := tacofancy.NewTacoPart("Shell", "https://example.org/shell/", "shell", "Make a shell")
 	taco := tacofancy.NewBaseTaco(baseLayer, mixin, condiment, seasoning, shell)
-	attachments := BuildAttachments(&taco)
+	attachments := BuildAttachments(taco)
 
 	expectedAttachments := make([]map[string]interface{}, 1)
 	expectedAttachments[0] = make(map[string]interface{})

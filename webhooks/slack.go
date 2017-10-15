@@ -4,6 +4,7 @@ package webhooks
 
 import (
 	"github.com/jmichalicek/tacofancy-slack/slack"
+	"github.com/jmichalicek/tacofancy-slack/tacofancy"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 	command, text, token := r.FormValue("command"), r.FormValue("text"), r.FormValue("token")
 	responseURL, channelId, userId := r.FormValue("response_url"), r.FormValue("channel_id"), r.FormValue("user_id")
 
-	client := tacoFancy.NewClient("", nil)
+	client := tacofancy.NewClient("", nil)
 
 	slashCommand := slack.SlashCommand{
 		Command: command, Text: text, Token: token, ResponseURL: responseURL, ChannelId: channelId, UserId: userId,
@@ -23,10 +24,10 @@ func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if slack.VerifyToken(slashCommand.Token) {
 		// could move some of this to the SlashCommand
 		// or should this use sc.RespondAsync()?
-		scr, err := sc.BuildResponse()
+		scr, err := slashCommand.BuildResponse()
 		if err == nil {
 			// //TODO: how to test this?
-			go slack.SendDelayedResponse(sc.URL(), scr)
+			go slack.SendDelayedResponse(slashCommand.ResponseURL, scr)
 			w.WriteHeader(200)
 			return
 		}

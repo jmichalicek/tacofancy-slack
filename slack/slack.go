@@ -150,7 +150,7 @@ func NewTacoRecipeResponse(client tacofancy.Client) (SlashCommandResponse, error
 	}
 
 	// TODO: or should I pass a reference, OO style?  I am not modifying it.
-	attachments := BuildAttachments(&fullTaco)
+	attachments := BuildAttachments(fullTaco)
 	// A bunch of duplicated stuff which it seems like using Taco interface would solve
 	// but since Taco interface cannot access the struct properties, here we are... unless the two objects
 	// just become one with some unused parts or I go with a whole bunch of duplicated getters/setters
@@ -166,7 +166,7 @@ func NewTacoLocoResponse(client tacofancy.Client) (SlashCommandResponse, error) 
 		return SlashCommandResponse{}, err
 	}
 
-	attachments := BuildAttachments(&randomTaco)
+	attachments := BuildAttachments(randomTaco)
 	attachments[0]["title"] = "A Delicious Random Taco"
 	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
 }

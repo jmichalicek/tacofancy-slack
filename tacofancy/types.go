@@ -1,6 +1,8 @@
 package tacofancy
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Some serious over-engineering is going on here for the sake of learning Go.
 // There is a Taco interface, BaseTaco which implements it,
@@ -21,14 +23,6 @@ type Taco interface {
 	Condiment() TacoPart
 	Seasoning() TacoPart
 	Shell() TacoPart
-
-	// These have to be pointer receivers.  Unfortunately, that means
-	// pointers to Taco must be used everywhere now.
-	SetBaseLayer(TacoPart)
-	SetMixin(TacoPart)
-	SetCondiment(TacoPart)
-	SetShell(TacoPart)
-	SetSeasoning(TacoPart)
 }
 
 // see https://taco-randomizer.herokuapp.com/random/ for a random example
@@ -88,6 +82,10 @@ type fullTacoJSON struct {
 	ShellURL string `json:"shell_url"`
 }
 
+func NewBaseTaco(baseLayer, mixin, condiment, seasoning, shell TacoPart) BaseTaco {
+	return BaseTaco{baseLayer: baseLayer, mixin: mixin, condiment: condiment, seasoning: seasoning, shell: shell}
+}
+
 // Implementation of a Taco made of random parts
 // This has a BaseLayer, Mixin, Condiment, Seasoning, and Shell
 // TacoPart
@@ -104,7 +102,7 @@ type BaseTaco struct {
 	shell TacoPart `json:"shell"`
 }
 
-func (t *BaseTaco) Description() string {
+func (t BaseTaco) Description() string {
 	// shell names are inconsistent, but roll with this for now
 	desc := t.baseLayer.Name + " seasoned with " + t.seasoning.Name + " with " + t.mixin.Name + " and " +
 		t.condiment.Name + " in " + t.shell.Name + "."
@@ -112,22 +110,17 @@ func (t *BaseTaco) Description() string {
 }
 
 // Should these return pointers?
-func (t *BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
-func (t *BaseTaco) Mixin() TacoPart     { return t.mixin }
-func (t *BaseTaco) Condiment() TacoPart { return t.condiment }
-func (t *BaseTaco) Seasoning() TacoPart { return t.seasoning }
-func (t *BaseTaco) Shell() TacoPart     { return t.shell }
+func (t BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
+func (t BaseTaco) Mixin() TacoPart     { return t.mixin }
+func (t BaseTaco) Condiment() TacoPart { return t.condiment }
+func (t BaseTaco) Seasoning() TacoPart { return t.seasoning }
+func (t BaseTaco) Shell() TacoPart     { return t.shell }
 
-// Should these take pointers?  I assume that the struct would need to use
-// pointers for that to matter?
-func (t *BaseTaco) SetBaseLayer(bl TacoPart) { t.baseLayer = bl }
-func (t *BaseTaco) SetMixin(m TacoPart)      { t.mixin = m }
-func (t *BaseTaco) SetCondiment(c TacoPart)  { t.condiment = c }
-func (t *BaseTaco) SetSeasoning(s TacoPart)  { t.seasoning = s }
-func (t *BaseTaco) SetShell(s TacoPart)      { t.shell = s }
-
-func NewBaseTaco(baseLayer, mixin, condiment, seasoning, shell TacoPart) BaseTaco {
-	return BaseTaco{baseLayer: baseLayer, mixin: mixin, condiment: condiment, seasoning: seasoning, shell: shell}
+// Create a new randomly generated taco
+// These tacos are made of random parts as returned from the TacoFancy API.
+func NewRandomTaco(baseLayer, mixin, condiment, seasoning, shell TacoPart) RandomTaco {
+	return RandomTaco{
+		BaseTaco: BaseTaco{baseLayer: baseLayer, mixin: mixin, condiment: condiment, seasoning: seasoning, shell: shell}}
 }
 
 // A taco which is not from a recipe, but from random selection of parts
@@ -136,7 +129,7 @@ type RandomTaco struct {
 }
 
 // Returns a description of the taco made up from the names of the parts
-func (t *RandomTaco) Description() string {
+func (t RandomTaco) Description() string {
 	// shell names are inconsistent, but roll with this for now
 	desc := t.baseLayer.Name + " seasoned with " + t.seasoning.Name + " with " + t.mixin.Name + " and " +
 		t.condiment.Name + " in " + t.shell.Name + "."
@@ -147,17 +140,20 @@ func (t *RandomTaco) Description() string {
 // to deal with the private fields
 // Unmarshals a RandomTacoJSON and then uses it to call the setters
 // on RandomTaco
+// This is bending the rules a bit on immutability, maybe there's a better answer
+// but to do it right, we'd need to return the RandomTaco.  Perhaps a "proper" way would be
+// to wrap this in some manner to make a new taco, unmarshal into it, and then return that
 func (t *RandomTaco) UnmarshalJSON(data []byte) error {
 	rtj := baseTacoJSON{}
 	err := json.Unmarshal(data, &rtj)
 	if err != nil {
 		return err
 	}
-	t.SetBaseLayer(rtj.BaseLayer)
-	t.SetMixin(rtj.Mixin)
-	t.SetSeasoning(rtj.Seasoning)
-	t.SetCondiment(rtj.Condiment)
-	t.SetShell(rtj.Shell)
+	t.baseLayer = rtj.BaseLayer
+	t.mixin = rtj.Mixin
+	t.seasoning = rtj.Seasoning
+	t.condiment = rtj.Condiment
+	t.shell = rtj.Shell
 
 	return nil
 }
@@ -174,14 +170,15 @@ func (t *RandomTaco) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rtj)
 }
 
+// Create a new randomly generated taco
+// These tacos are made of random parts as returned from the TacoFancy API.
+func NewFullTaco(name, url, recipie, slug string, baseLayer, mixin, condiment, seasoning, shell TacoPart) FullTaco {
+	return FullTaco{
+		BaseTaco: BaseTaco{baseLayer: baseLayer, mixin: mixin, condiment: condiment, seasoning: seasoning, shell: shell}}
+}
+
 // Implementation of a Taco from a full recipe
-// Fields duplicated from RandomTaco because de-duplicating those plus
-// allowing for json marshal/unmarshal plus using idiomatically named
-// getters is a pain.  End up implementing getters and setters for each struct
-// MarshalJSON and UnmarshalJSON for each struct, etc.  It would be less work
-// to just have Taco and have some extra fields.
-// Experimented with BaseTaco embedded struct which had the getters and setters
-// May try it again.
+// These tacos come from the TacoFancy API as a complete recipe with a name, url, slug, etc.
 type FullTaco struct {
 	// Can also do this as *BaseTaco but I am not clear on the implications
 	// of using a pointer and it seems to be breaking setters.
@@ -197,29 +194,30 @@ type FullTaco struct {
 
 	// full taco api doubles up url stuff for some reaosn
 	// URL to the baselayer for the taco
-	BaseLayerURL string `json:"base_layer_url"`
+	baseLayerURL string `json:"base_layer_url"`
 	// URL to the mixin of the taco
-	MixinURL string `json:"mixin_url"`
+	mixinURL string `json:"mixin_url"`
 	// URL to the condiment of the taco
-	CondimentURL string `json:"condiment_url"`
+	condimentURL string `json:"condiment_url"`
 	// URL to the seasoning of the taco
-	SeasoningURL string `json:"seasoning_url"`
+	seasoningURL string `json:"seasoning_url"`
 	// URL to the shell of the taco
-	ShellURL string `json:"shell_url"`
+	shellURL string `json:"shell_url"`
 }
 
 // Ignoring the RecipeURL, etc. for now
-func (t *FullTaco) Name() string       { return t.name }
-func (t *FullTaco) URL() string        { return t.url }
-func (t *FullTaco) Recipe() string     { return t.recipe }
-func (t *FullTaco) Slug() string       { return t.slug }
-func (t *FullTaco) SetName(n string)   { t.name = n }
-func (t *FullTaco) SetURL(u string)    { t.url = u }
-func (t *FullTaco) SetRecipe(r string) { t.recipe = r }
-func (t *FullTaco) SetSlug(s string)   { t.slug = s }
+func (t FullTaco) Name() string         { return t.name }
+func (t FullTaco) URL() string          { return t.url }
+func (t FullTaco) Recipe() string       { return t.recipe }
+func (t FullTaco) Slug() string         { return t.slug }
+func (t FullTaco) BaseLayerURL() string { return t.baseLayerURL }
+func (t FullTaco) MixinURL() string     { return t.mixinURL }
+func (t FullTaco) CondimentURL() string { return t.condimentURL }
+func (t FullTaco) SeasoningURL() string { return t.seasoningURL }
+func (t FullTaco) ShellURL() string     { return t.shellURL }
 
 // Returns a description of the taco made up from the names of the parts
-func (t *FullTaco) Description() string {
+func (t FullTaco) Description() string {
 	desc := t.baseLayer.Name
 	if t.seasoning.Name != "" {
 		desc = desc + " seasoned with " + t.seasoning.Name
@@ -250,22 +248,27 @@ func (t *FullTaco) Description() string {
 // to deal with the private fields
 // Unmarshals a RandomTacoJSON and then uses it to call the setters
 // on RandomTaco
+// mucks up the whole immutability thing for now
 func (t *FullTaco) UnmarshalJSON(data []byte) error {
 	tj := fullTacoJSON{}
 	err := json.Unmarshal(data, &tj)
 	if err != nil {
 		return err
 	}
-	t.SetBaseLayer(tj.BaseLayer)
-	t.SetMixin(tj.Mixin)
-	t.SetSeasoning(tj.Seasoning)
-	t.SetCondiment(tj.Condiment)
-	t.SetShell(tj.Shell)
-
-	t.SetName(tj.Name)
-	t.SetURL(tj.URL)
-	t.SetRecipe(tj.Recipe)
-	t.SetSlug(tj.Slug)
+	t.baseLayer = tj.BaseLayer
+	t.mixin = tj.Mixin
+	t.seasoning = tj.Seasoning
+	t.condiment = tj.Condiment
+	t.shell = tj.Shell
+	t.name = tj.Name
+	t.url = tj.URL
+	t.recipe = tj.Recipe
+	t.slug = tj.Slug
+	t.baseLayerURL = tj.BaseLayerURL
+	t.mixinURL = tj.MixinURL
+	t.condimentURL = tj.CondimentURL
+	t.seasoningURL = tj.SeasoningURL
+	t.shellURL = tj.ShellURL
 
 	return nil
 }
