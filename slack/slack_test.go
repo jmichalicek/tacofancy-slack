@@ -96,21 +96,25 @@ func TestBuildAttachments(t *testing.T) {
 	seasoning := tacofancy.NewTacoPart("Seasoning", "https://example.org/seasoning/", "seasoning", "Mix up some seasonings")
 	shell := tacofancy.NewTacoPart("Shell", "https://example.org/shell/", "shell", "Make a shell")
 	taco := tacofancy.NewBaseTaco(baseLayer, mixin, condiment, seasoning, shell)
-	attachments := BuildAttachments(taco)
+	attachments := BuildAttachments(&taco)
 
 	expectedAttachments := make([]map[string]interface{}, 1)
 	expectedAttachments[0] = make(map[string]interface{})
 	fields := make([]AttachmentField, 5, 5)
-	fields[0] = NewRecipeAttachmentField("Base layer", baseLayer)
-	fields[1] = NewRecipeAttachmentField("Mixin", mixin)
-	fields[2] = NewRecipeAttachmentField("Condiment", condiment)
-	fields[3] = NewRecipeAttachmentField("Seasoning", seasoning)
+	expectedAttachments[0]["text"] = taco.Description()
+	fields[0] = NewRecipeAttachmentField("Base Layer", baseLayer)
+	fields[1] = NewRecipeAttachmentField("Seasoning", seasoning)
+	fields[2] = NewRecipeAttachmentField("Mixin", mixin)
+	fields[3] = NewRecipeAttachmentField("Condiment", condiment)
 	fields[4] = NewRecipeAttachmentField("Shell", shell)
 	expectedAttachments[0]["text"] = taco.Description()
 	expectedAttachments[0]["fields"] = fields
 
-	if !reflect.DeepEqual(attachments, expectedAttachments) {
-		t.Errorf("Expected:  %v\n\n but got: %v", expectedAttachments, attachments)
+	if attachments[0]["text"] != expectedAttachments[0]["text"] {
+		t.Errorf("uh oh")
+	}
+	if !reflect.DeepEqual(attachments[0]["fields"], expectedAttachments[0]["fields"]) {
+		t.Errorf("Expected:\n\n%v\n\nGot:\n\n%v", expectedAttachments[0]["fields"], attachments[0]["fields"])
 	}
 }
 

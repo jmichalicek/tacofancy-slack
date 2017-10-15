@@ -22,7 +22,8 @@ type Taco interface {
 	Seasoning() TacoPart
 	Shell() TacoPart
 
-	// Should these take pointers?
+	// These have to be pointer receivers.  Unfortunately, that means
+	// pointers to Taco must be used everywhere now.
 	SetBaseLayer(TacoPart)
 	SetMixin(TacoPart)
 	SetCondiment(TacoPart)
@@ -65,7 +66,7 @@ type baseTacoJSON struct {
 }
 
 type fullTacoJSON struct {
-	*baseTacoJSON
+	baseTacoJSON
 	Name string `json:"name"`
 	// The URL to the recipe
 	URL string `json:"url"`
@@ -103,7 +104,7 @@ type BaseTaco struct {
 	shell TacoPart `json:"shell"`
 }
 
-func (t BaseTaco) Description() string {
+func (t *BaseTaco) Description() string {
 	// shell names are inconsistent, but roll with this for now
 	desc := t.baseLayer.Name + " seasoned with " + t.seasoning.Name + " with " + t.mixin.Name + " and " +
 		t.condiment.Name + " in " + t.shell.Name + "."
@@ -111,11 +112,11 @@ func (t BaseTaco) Description() string {
 }
 
 // Should these return pointers?
-func (t BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
-func (t BaseTaco) Mixin() TacoPart     { return t.mixin }
-func (t BaseTaco) Condiment() TacoPart { return t.condiment }
-func (t BaseTaco) Seasoning() TacoPart { return t.seasoning }
-func (t BaseTaco) Shell() TacoPart     { return t.shell }
+func (t *BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
+func (t *BaseTaco) Mixin() TacoPart     { return t.mixin }
+func (t *BaseTaco) Condiment() TacoPart { return t.condiment }
+func (t *BaseTaco) Seasoning() TacoPart { return t.seasoning }
+func (t *BaseTaco) Shell() TacoPart     { return t.shell }
 
 // Should these take pointers?  I assume that the struct would need to use
 // pointers for that to matter?
@@ -273,7 +274,7 @@ func (t *FullTaco) UnmarshalJSON(data []byte) error {
 // the public fields, and then returns the marshal data
 func (t *FullTaco) MarshalJSON() ([]byte, error) {
 	tj := fullTacoJSON{
-		baseTacoJSON: &baseTacoJSON{BaseLayer: t.baseLayer,
+		baseTacoJSON: baseTacoJSON{BaseLayer: t.baseLayer,
 			Mixin:     t.mixin,
 			Seasoning: t.seasoning,
 			Condiment: t.condiment,

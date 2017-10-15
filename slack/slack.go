@@ -115,7 +115,7 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	attachments[0]["text"] = taco.Description()
 	baseLayer := taco.BaseLayer()
 	if baseLayer.Name != "" {
-		fields[0] = AttachmentField{Title: "Base Layer", Value: "<" + githubRawUrlToRepo(baseLayer.URL) + "|" + baseLayer.Name + ">", Short: true}
+		fields[0] = AttachmentField{Title: "Base Layer: ", Value: "<" + githubRawUrlToRepo(baseLayer.URL) + "|" + baseLayer.Name + ">", Short: true}
 	}
 	if taco.Seasoning().Name != "" {
 		fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<" + githubRawUrlToRepo(taco.Seasoning().URL) + "|" + taco.Seasoning().Name + ">", Short: true}
@@ -134,8 +134,9 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	return attachments
 }
 
-func NewRecipeAttachmentField(title string, part TacoPart) AttachmentField {
-	return AttachmentField{Title: title+": ",
+func NewRecipeAttachmentField(title string, part tacofancy.TacoPart) AttachmentField {
+	return AttachmentField{
+		Title: title+": ",
 		Value: "<" + githubRawUrlToRepo(part.URL) + "|" + part.Name + ">",
 		Short: true}
 }
