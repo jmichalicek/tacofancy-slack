@@ -9,7 +9,9 @@ import (
 
 const DefaultBaseURL string = "https://taco-randomizer.herokuapp.com"
 const randomPath string = "/random/"
-var DefaultClient = &http.Client{Timeout: time.Second * 10}
+// using reference to http.Client here like https://github.com/digitalocean/godo/blob/master/godo.go#L151
+// and the golang github client written by google
+var DefaultHTTPClient = &http.Client{Timeout: time.Second * 10}
 
 // Get a new tacofancy api client
 // should this return a reference like the official golang github client
@@ -21,7 +23,7 @@ func NewClient(baseURL string, httpClient *http.Client) Client {
 	}
 
 	if httpClient == nil {
-		httpClient = DefaultClient
+		httpClient = DefaultHTTPClient
 	}
 
 	return Client{BaseURL: baseURL, httpClient: httpClient}
