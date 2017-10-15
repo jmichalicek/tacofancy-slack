@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/jmichalicek/tacofancy-slack/tacofancy"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-	"math/rand"
 )
-
 
 // converts https://raw.githubusercontent.com/sinker/tacofancy/master/condiments/baja_white_sauce.md
 // to https://github.com/sinker/tacofancy/blob/master/condiments/baja_white_sauce.md
@@ -36,14 +35,15 @@ func getQuote() string {
 	tacoQuotes[10] = "You want some more cinnamon crispas?\nIf you don't, hasta la vista\nJust take the rest home in a doggie bag if you wanna\nYou can finish it mañana"
 	tacoQuotes[11] = "Well, it's been a pleasure, I can't eat no more\nSeñor, la cuenta, por favor\nIf you ain't ever tried real Mexican cooking, well, you oughta\nJust don't drink the water"
 
-	random := func (min, max int) int {
-    	rand.Seed(time.Now().Unix())
-    	return rand.Intn(max - min) + min
+	random := func(min, max int) int {
+		rand.Seed(time.Now().Unix())
+		return rand.Intn(max-min) + min
 	}
 
 	r := random(0, 11)
 	return tacoQuotes[r]
 }
+
 // Example slash command from docs
 //     token=gIkuvaNzQIHg97ATvDxqgjtO
 // team_id=T0001
@@ -73,13 +73,24 @@ type SlashCommand struct {
 	Text           string
 	ResponseURL    string
 	TriggerId      string
+
+	// I do not really feel like this belongs here, but for the sake of easy testability
+	// it will live here for now.  In a more complex app perhaps there would be a
+	// TacoFancySlashCommand where this would feel more appropriate
+	// or perhaps BuildResponse() should not be a SlashCommand method and I should pass
+	// the SlashCommand and client into NewTacoRecipeResponse() etc then a factory method
+	// which is basiclaly what BuildResponse() is.  The problem here is that I feel like
+	// no matter what, at some point, I am configuring a tacofancy.Client and passing it inot
+	// a function, not because I know the actual code needs it, but because the code "might" need it
+	// and test cases need some way to pass it in for those.
+	TacofancyClient	tacofancy.Client
 }
 
 // A slashcommand response attachment
 type AttachmentField struct {
-	Title string `json:"title"`
-	Value string `json:"value"`
-	Short bool `json:"short"`
+	Title     string `json:"title"`
+	Value     string `json:"value"`
+	Short     bool   `json:"short"`
 	TitleLink string `json:"title_link"`
 }
 
@@ -90,17 +101,94 @@ func VerifyToken(token string) bool {
 	return token == os.Getenv("TACOFANCY_VERIFICATION_TOKEN")
 }
 
-// Builds a SlashCommandResponse to use for responding to a Slack SlashCommand
-func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
-	// respond to slash command
-
-	// could make this more dynamic, but keeping it simple for now
-	// and a Taco interface could make this simpler by not needing different vars for different taco types
+// Functional approach like this?
+// or should I take a more C-like approach and pass in attachments and modify it
+// or should this actually be a method of SlashCommand?
+func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	attachments := make([]map[string]interface{}, 1)
 	attachments[0] = make(map[string]interface{})
 	fields := make([]AttachmentField, 5, 5)
 
-	// TODO: split these out into separate handlers?
+	// FullTaco specific
+	//attachments[0]["title"] = taco.Name()
+	//attachments[0]["title_link"] = githubRawUrlToRepo(taco.URL)
+	attachments[0]["text"] = taco.Description()
+	baseLayer := taco.BaseLayer()
+	if baseLayer.Name != "" {
+		fields[0] = AttachmentField{Title: "Base Layer: ", Value: "<" + githubRawUrlToRepo(baseLayer.URL) + "|" + baseLayer.Name + ">", Short: true}
+	}
+	if taco.Seasoning().Name != "" {
+		fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<" + githubRawUrlToRepo(taco.Seasoning().URL) + "|" + taco.Seasoning().Name + ">", Short: true}
+	}
+	if taco.Mixin().Name != "" {
+		fields[2] = AttachmentField{Title: "Mixin: ", Value: "<" + githubRawUrlToRepo(taco.Mixin().URL) + "|" + taco.Mixin().Name + ">", Short: true}
+	}
+	if taco.Condiment().Name != "" {
+		fields[3] = AttachmentField{Title: "Condiment: ", Value: "<" + githubRawUrlToRepo(taco.Condiment().URL) + "|" + taco.Condiment().Name + ">", Short: true}
+	}
+	if taco.Shell().Name != "" {
+		fields[4] = AttachmentField{Title: "Shell: ", Value: "<" + githubRawUrlToRepo(taco.Shell().URL) + "|" + taco.Shell().Name + ">", Short: true}
+	}
+	attachments[0]["fields"] = fields
+
+	return attachments
+}
+
+func NewRecipeAttachmentField(title string, part tacofancy.TacoPart) AttachmentField {
+	return AttachmentField{
+		Title: title+": ",
+		Value: "<" + githubRawUrlToRepo(part.URL) + "|" + part.Name + ">",
+		Short: true}
+}
+
+// TODO: take the taco as an arg?  Then these become super easy to test since there is no api call
+// Returns a SlashCommandResponse for the command `/taco recipe`
+func NewTacoRecipeResponse(client tacofancy.Client) (SlashCommandResponse, error) {
+	fullTaco, err := client.GetRandomFullTaco()
+	if err != nil {
+		return SlashCommandResponse{}, err
+	}
+
+	// TODO: or should I pass a reference, OO style?  I am not modifying it.
+	attachments := BuildAttachments(&fullTaco)
+	// A bunch of duplicated stuff which it seems like using Taco interface would solve
+	// but since Taco interface cannot access the struct properties, here we are... unless the two objects
+	// just become one with some unused parts or I go with a whole bunch of duplicated getters/setters
+	attachments[0]["title"] = fullTaco.Name()
+	attachments[0]["title_link"] = githubRawUrlToRepo(fullTaco.URL())
+	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+}
+
+// Returns a SlashCommandResponse for the command `/taco loco`
+func NewTacoLocoResponse(client tacofancy.Client) (SlashCommandResponse, error) {
+	randomTaco, err := client.GetRandomTacoParts()
+	if err != nil {
+		return SlashCommandResponse{}, err
+	}
+
+	attachments := BuildAttachments(&randomTaco)
+	attachments[0]["title"] = "A Delicious Random Taco"
+	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+}
+
+func NewTacoGrandeResponse() (SlashCommandResponse, error) {
+	attachments := make([]map[string]interface{}, 1)
+	attachments[0] = make(map[string]interface{})
+	// fields := make([]AttachmentField, 5, 5)
+
+	attachments[0]["title"] = "Taco Grande"
+	attachments[0]["title_link"] = "https://www.youtube.com/watch?v=mX18yNwqnMg"
+	attachments[0]["text"] = getQuote()
+	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+}
+
+// Builds a SlashCommandResponse to use for responding to a Slack SlashCommand
+// TODO:  make a responder interface and pass that in?  then t.Respond() could
+// be called?  Not sure since that moves the slack specific logic out of here
+// but could almost certainly be far more useful for a more general slack framework
+func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
+	// respond to slash command
+	// TODO: Have a response factory registry?
 	parts := strings.Split(sc.Text, " ")
 	commandType := "recipe"
 	if len(parts) >= 1 && parts[0] != "" {
@@ -108,64 +196,11 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 	}
 
 	if commandType == "recipe" {
-		fullTaco, err := tacofancy.GetRandomFullTaco()
-		if err != nil {
-			return SlashCommandResponse{}, err
-		}
-		// A bunch of duplicated stuff which it seems like using Taco interface would solve
-		// but since Taco interface cannot access the struct properties, here we are... unless the two objects
-		// just become one with some unused parts or I go with a whole bunch of duplicated getters/setters
-		attachments[0]["title"] = fullTaco.Name
-		attachments[0]["title_link"] = githubRawUrlToRepo(fullTaco.URL)
-		attachments[0]["text"] = fullTaco.Description()
-		if fullTaco.BaseLayer.Name != "" {
-			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(fullTaco.BaseLayer.URL)+"|"+fullTaco.BaseLayer.Name+">", Short: true}
-		}
-		if fullTaco.Seasoning.Name != "" {
-			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(fullTaco.Seasoning.URL)+"|"+fullTaco.Seasoning.Name+">", Short: true}
-		}
-		if fullTaco.Mixin.Name != "" {
-			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(fullTaco.Mixin.URL)+"|"+fullTaco.Mixin.Name+">", Short: true}
-		}
-		if fullTaco.Condiment.Name != "" {
-			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(fullTaco.Condiment.URL)+"|"+fullTaco.Condiment.Name+">", Short: true}
-		}
-		if fullTaco.Shell.Name != "" {
-			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(fullTaco.Shell.URL)+"|"+fullTaco.Shell.Name+">", Short: true}
-		}
-		attachments[0]["fields"] = fields
-
-		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+		return NewTacoRecipeResponse(sc.TacofancyClient)
 	} else if commandType == "loco" {
-		randomTaco, err := tacofancy.GetRandomTacoParts()
-		if err != nil {
-			return SlashCommandResponse{}, err
-		}
-		attachments[0]["title"] = "A Delicious Random Taco"
-		attachments[0]["text"] = randomTaco.Description()
-		if randomTaco.BaseLayer.Name != "" {
-			fields[0] = AttachmentField{Title: "Base Layer", Value: "<"+githubRawUrlToRepo(randomTaco.BaseLayer.URL)+"|"+randomTaco.BaseLayer.Name+">", Short: true}
-		}
-		if randomTaco.Seasoning.Name != "" {
-			fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<"+githubRawUrlToRepo(randomTaco.Seasoning.URL)+"|"+randomTaco.Seasoning.Name+">", Short: true}
-		}
-		if randomTaco.Mixin.Name != "" {
-			fields[2] = AttachmentField{Title: "Mixin: ", Value: "<"+githubRawUrlToRepo(randomTaco.Mixin.URL)+"|"+randomTaco.Mixin.Name+">", Short: true}
-		}
-		if randomTaco.Condiment.Name != "" {
-			fields[3] = AttachmentField{Title: "Condiment: ", Value: "<"+githubRawUrlToRepo(randomTaco.Condiment.URL)+"|"+randomTaco.Condiment.Name+">", Short: true}
-		}
-		if randomTaco.Shell.Name != "" {
-			fields[4] = AttachmentField{Title: "Shell: ", Value: "<"+githubRawUrlToRepo(randomTaco.Shell.URL)+"|"+randomTaco.Shell.Name+">", Short: true}
-		}
-		attachments[0]["fields"] = fields
-
-		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+		return NewTacoLocoResponse(sc.TacofancyClient)
 	} else if commandType == "grande" {
-		attachments[0]["title"] = "Taco Grande"
-		attachments[0]["title_link"] = "https://www.youtube.com/watch?v=mX18yNwqnMg"
-		attachments[0]["text"] = getQuote()
-		return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+		return NewTacoGrandeResponse()
 	}
 	return SlashCommandResponse{ResponseType: "in_channel", Text: "I didn't understand that command"}, nil
 }
@@ -175,7 +210,7 @@ func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 func (sc *SlashCommand) RespondAsync(ch chan error) {
 	defer close(ch)
 	scr, _ := sc.BuildResponse()
-	ch <- SendDelayedResponse(*sc, scr)
+	ch <- SendDelayedResponse(sc.ResponseURL, scr)
 }
 
 type SlashCommandResponse struct {
@@ -189,21 +224,16 @@ type SlashCommandResponse struct {
 
 // Sends the provided SlashCommandResponse to the provided SlashCommand
 // by Marshalling the SlashCommandResponse and making an HTTP POST to the SlashCommand.ResponseURL
-func SendDelayedResponse(sc SlashCommand, scr SlashCommandResponse) error {
+func SendDelayedResponse(url string, scr SlashCommandResponse) error {
 	var httpClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	url := sc.ResponseURL
-	//commandResponse, _ := sc.BuildResponse()
 	commandResponseJson, err := json.Marshal(scr)
 	if err != nil {
 		return err
 	}
 
-	// jsonStr and bytes.NewBuffer() from https://stackoverflow.com/a/24455606
-	// TODO: See if there is a better way
-	// not sure I need this.. isn't it already bytes when it comes out of Marshal?
-	// jsonStr := []byte(commandResponseJson)
+	// bytes.NewBuffer() from https://stackoverflow.com/a/24455606
 	resp, err := httpClient.Post(url, "application/json", bytes.NewBuffer(commandResponseJson))
 	if err != nil {
 		return err
