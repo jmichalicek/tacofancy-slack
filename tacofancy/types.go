@@ -42,6 +42,12 @@ type TacoPart struct {
 	Slug string `json:"slug"`
 	// Recipe instructions on how to make this TacoPart
 	Recipe string `json:"recipe"`
+
+	// could make sense to put the type of part on here, but the api does not return that data
+}
+
+func NewTacoPart(name, url, slug, recipe string) TacoPart {
+	return TacoPart{Name: name, URL: url, Slug: slug, Recipe: recipe}
 }
 
 // FOr marshaling and unmarshaling a BaseTaco
@@ -97,7 +103,7 @@ type BaseTaco struct {
 	shell TacoPart `json:"shell"`
 }
 
-func (t *BaseTaco) Description() string {
+func (t BaseTaco) Description() string {
 	// shell names are inconsistent, but roll with this for now
 	desc := t.baseLayer.Name + " seasoned with " + t.seasoning.Name + " with " + t.mixin.Name + " and " +
 		t.condiment.Name + " in " + t.shell.Name + "."
@@ -105,11 +111,11 @@ func (t *BaseTaco) Description() string {
 }
 
 // Should these return pointers?
-func (t *BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
-func (t *BaseTaco) Mixin() TacoPart     { return t.mixin }
-func (t *BaseTaco) Condiment() TacoPart { return t.condiment }
-func (t *BaseTaco) Seasoning() TacoPart { return t.seasoning }
-func (t *BaseTaco) Shell() TacoPart     { return t.shell }
+func (t BaseTaco) BaseLayer() TacoPart { return t.baseLayer }
+func (t BaseTaco) Mixin() TacoPart     { return t.mixin }
+func (t BaseTaco) Condiment() TacoPart { return t.condiment }
+func (t BaseTaco) Seasoning() TacoPart { return t.seasoning }
+func (t BaseTaco) Shell() TacoPart     { return t.shell }
 
 // Should these take pointers?  I assume that the struct would need to use
 // pointers for that to matter?
@@ -118,6 +124,10 @@ func (t *BaseTaco) SetMixin(m TacoPart)      { t.mixin = m }
 func (t *BaseTaco) SetCondiment(c TacoPart)  { t.condiment = c }
 func (t *BaseTaco) SetSeasoning(s TacoPart)  { t.seasoning = s }
 func (t *BaseTaco) SetShell(s TacoPart)      { t.shell = s }
+
+func NewBaseTaco(baseLayer, mixin, condiment, seasoning, shell TacoPart) BaseTaco {
+	return BaseTaco{baseLayer: baseLayer, mixin: mixin, condiment: condiment, seasoning: seasoning, shell: shell}
+}
 
 // A taco which is not from a recipe, but from random selection of parts
 type RandomTaco struct {

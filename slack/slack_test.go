@@ -88,6 +88,32 @@ func TestSlashCommandBuildResponseForTacoLoco(t *testing.T) {
 	}
 }
 
+func TestBuildAttachments(t *testing.T) {
+
+	baseLayer := tacofancy.NewTacoPart("BaseLayer", "https://example.org/baseLayer/", "baseLayer", "Cook up the base")
+	mixin := tacofancy.NewTacoPart("Mixin", "https://example.org/mixin/", "mixin", "Make the mixin")
+	condiment := tacofancy.NewTacoPart("Condiment", "https://example.org/condiment/", "condiment", "Make the condiment")
+	seasoning := tacofancy.NewTacoPart("Seasoning", "https://example.org/seasoning/", "seasoning", "Mix up some seasonings")
+	shell := tacofancy.NewTacoPart("Shell", "https://example.org/shell/", "shell", "Make a shell")
+	taco := tacofancy.NewBaseTaco(baseLayer, mixin, condiment, seasoning, shell)
+	attachments := BuildAttachments(taco)
+
+	expectedAttachments := make([]map[string]interface{}, 1)
+	expectedAttachments[0] = make(map[string]interface{})
+	fields := make([]AttachmentField, 5, 5)
+	fields[0] = NewRecipeAttachmentField("Base layer", baseLayer)
+	fields[1] = NewRecipeAttachmentField("Mixin", mixin)
+	fields[2] = NewRecipeAttachmentField("Condiment", condiment)
+	fields[3] = NewRecipeAttachmentField("Seasoning", seasoning)
+	fields[4] = NewRecipeAttachmentField("Shell", shell)
+	expectedAttachments[0]["text"] = taco.Description()
+	expectedAttachments[0]["fields"] = fields
+
+	if !reflect.DeepEqual(attachments, expectedAttachments) {
+		t.Errorf("Expected:  %v\n\n but got: %v", expectedAttachments, attachments)
+	}
+}
+
 func TestSlashCommandRespondAsync(t *testing.T) {
 	// TODO
 }
@@ -96,6 +122,10 @@ func TestVerifyToken(t *testing.T) {
 	// TODO
 }
 
-func TestBuildAttachments(t *testing.T) {
-	
+func TestNewRecipeAttachmentField(t *testing.T) {
+
+}
+
+func TestNewTacoPart(t *testing.T) {
+
 }

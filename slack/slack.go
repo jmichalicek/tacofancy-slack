@@ -134,6 +134,12 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	return attachments
 }
 
+func NewRecipeAttachmentField(title string, part TacoPart) AttachmentField {
+	return AttachmentField{Title: title+": ",
+		Value: "<" + githubRawUrlToRepo(part.URL) + "|" + part.Name + ">",
+		Short: true}
+}
+
 // TODO: take the taco as an arg?  Then these become super easy to test since there is no api call
 // Returns a SlashCommandResponse for the command `/taco recipe`
 func NewTacoRecipeResponse(client tacofancy.Client) (SlashCommandResponse, error) {
