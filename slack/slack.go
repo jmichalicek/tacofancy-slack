@@ -44,6 +44,16 @@ func getQuote() string {
 	return tacoQuotes[r]
 }
 
+// Returns a new SlashCommand struct
+func NewSlashCommand(token, teamID, teamDomain, enterprise, enterpriseName, channelID, channelName, userID, userName,
+	command, text, responseURL, triggerID string, tacofancyClient tacofancy.Client) SlashCommand {
+
+	return SlashCommand{token: token, teamID: teamID, teamDomain: teamDomain, enterprise: enterprise,
+		enterpriseName: enterpriseName, channelID: channelID, userName: userName, command: command, text: text,
+		responseURL: responseURL, triggerID: triggerID, tacofancyClien: tacofancyClient}
+
+}
+
 // Example slash command from docs
 //     token=gIkuvaNzQIHg97ATvDxqgjtO
 // team_id=T0001
@@ -60,19 +70,19 @@ func getQuote() string {
 // trigger_id=13345224609.738474920.8088930838d88f008e0
 // https://api.slack.com/slash-commands
 type SlashCommand struct {
-	Token          string
-	TeamId         string
-	TeamDomain     string
-	Enterprise     string
-	EnterpriseName string
-	ChannelId      string
-	ChannelName    string
-	UserId         string
-	UserName       string
-	Command        string
-	Text           string
-	ResponseURL    string
-	TriggerId      string
+	token          string
+	teamID         string
+	teamDomain     string
+	enterprise     string
+	enterpriseName string
+	channelID      string
+	channelName    string
+	userID         string
+	userName       string
+	command        string
+	text           string
+	responseURL    string
+	triggerID      string
 
 	// I do not really feel like this belongs here, but for the sake of easy testability
 	// it will live here for now.  In a more complex app perhaps there would be a
@@ -83,7 +93,7 @@ type SlashCommand struct {
 	// no matter what, at some point, I am configuring a tacofancy.Client and passing it inot
 	// a function, not because I know the actual code needs it, but because the code "might" need it
 	// and test cases need some way to pass it in for those.
-	TacofancyClient tacofancy.Client
+	tacofancyClient tacofancy.Client
 }
 
 // A slashcommand response attachment

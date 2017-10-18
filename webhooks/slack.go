@@ -15,12 +15,13 @@ func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 	client := tacofancy.NewClient("", nil)
 
-	slashCommand := slack.SlashCommand{
-		Command: command, Text: text, Token: token, ResponseURL: responseURL, ChannelId: channelId, UserId: userId,
-		TacofancyClient: client}
+	// token, teamID, teamDomain, enterprise, enterpriseName, channelID, channelName, userID, userName,
+	// 	command, text, responseURL, triggerID string, tacofancyClient tacofancy.Client
 
-  // for a more generic implementation, perhaps the token could be used to look up
-  // the slack app and an appropriate SlashCommand
+	slashCommand := slack.NewSlashCommand(token, "", "", "", "", channelId, userId, "", command, text, responseURL, "", client)
+
+	// for a more generic implementation, perhaps the token could be used to look up
+	// the slack app and an appropriate SlashCommand
 	if slack.VerifyToken(slashCommand.Token) {
 		// could move some of this to the SlashCommand
 		// or should this use sc.RespondAsync()?
