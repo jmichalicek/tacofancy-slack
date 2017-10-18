@@ -83,7 +83,7 @@ type SlashCommand struct {
 	// no matter what, at some point, I am configuring a tacofancy.Client and passing it inot
 	// a function, not because I know the actual code needs it, but because the code "might" need it
 	// and test cases need some way to pass it in for those.
-	TacofancyClient	tacofancy.Client
+	TacofancyClient tacofancy.Client
 }
 
 // A slashcommand response attachment
@@ -113,21 +113,20 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 	//attachments[0]["title"] = taco.Name()
 	//attachments[0]["title_link"] = githubRawUrlToRepo(taco.URL)
 	attachments[0]["text"] = taco.Description()
-	baseLayer := taco.BaseLayer()
-	if baseLayer.Name != "" {
-		fields[0] = AttachmentField{Title: "Base Layer: ", Value: "<" + githubRawUrlToRepo(baseLayer.URL) + "|" + baseLayer.Name + ">", Short: true}
+	if taco.BaseLayer().Name != "" {
+		fields[0] = NewRecipeAttachmentField("Base Layer", taco.BaseLayer())
 	}
 	if taco.Seasoning().Name != "" {
-		fields[1] = AttachmentField{Title: "Seasoning: ", Value: "<" + githubRawUrlToRepo(taco.Seasoning().URL) + "|" + taco.Seasoning().Name + ">", Short: true}
+		fields[1] = NewRecipeAttachmentField("Seasoning", taco.Seasoning())
 	}
 	if taco.Mixin().Name != "" {
-		fields[2] = AttachmentField{Title: "Mixin: ", Value: "<" + githubRawUrlToRepo(taco.Mixin().URL) + "|" + taco.Mixin().Name + ">", Short: true}
+		fields[2] = NewRecipeAttachmentField("Mixin", taco.Mixin())
 	}
 	if taco.Condiment().Name != "" {
-		fields[3] = AttachmentField{Title: "Condiment: ", Value: "<" + githubRawUrlToRepo(taco.Condiment().URL) + "|" + taco.Condiment().Name + ">", Short: true}
+		fields[3] = NewRecipeAttachmentField("Condiment", taco.Condiment())
 	}
 	if taco.Shell().Name != "" {
-		fields[4] = AttachmentField{Title: "Shell: ", Value: "<" + githubRawUrlToRepo(taco.Shell().URL) + "|" + taco.Shell().Name + ">", Short: true}
+		fields[4] = NewRecipeAttachmentField("Shell", taco.Shell())
 	}
 	attachments[0]["fields"] = fields
 
@@ -136,7 +135,7 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 
 func NewRecipeAttachmentField(title string, part tacofancy.TacoPart) AttachmentField {
 	return AttachmentField{
-		Title: title+": ",
+		Title: title + ": ",
 		Value: "<" + githubRawUrlToRepo(part.URL) + "|" + part.Name + ">",
 		Short: true}
 }
