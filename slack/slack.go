@@ -173,8 +173,6 @@ func NewTacoLocoResponse(client tacofancy.Client) (SlashCommandResponse, error) 
 func NewTacoGrandeResponse() (SlashCommandResponse, error) {
 	attachments := make([]map[string]interface{}, 1)
 	attachments[0] = make(map[string]interface{})
-	// fields := make([]AttachmentField, 5, 5)
-
 	attachments[0]["title"] = "Taco Grande"
 	attachments[0]["title_link"] = "https://www.youtube.com/watch?v=mX18yNwqnMg"
 	attachments[0]["text"] = getQuote()
