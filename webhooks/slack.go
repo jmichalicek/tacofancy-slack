@@ -11,24 +11,21 @@ import (
 func SlashCommandHandler(w http.ResponseWriter, r *http.Request) {
 	// does not come in as json, but response should be json
 	command, text, token := r.FormValue("command"), r.FormValue("text"), r.FormValue("token")
-	responseURL, channelId, userId := r.FormValue("response_url"), r.FormValue("channel_id"), r.FormValue("user_id")
+	responseURL, channelID, userID := r.FormValue("response_url"), r.FormValue("channel_id"), r.FormValue("user_id")
 
 	client := tacofancy.NewClient("", nil)
-
-	// token, teamID, teamDomain, enterprise, enterpriseName, channelID, channelName, userID, userName,
-	// 	command, text, responseURL, triggerID string, tacofancyClient tacofancy.Client
-
-	slashCommand := slack.NewSlashCommand(token, "", "", "", "", channelId, userId, "", command, text, responseURL, "", client)
+	slashCommand := slack.NewSlashCommand(token, command, text, responseURL, channelID, "", userID, "", "", "", "", "",
+		"", client)
 
 	// for a more generic implementation, perhaps the token could be used to look up
 	// the slack app and an appropriate SlashCommand
-	if slack.VerifyToken(slashCommand.Token) {
+	if slack.VerifyToken(slashCommand.Token()) {
 		// could move some of this to the SlashCommand
 		// or should this use sc.RespondAsync()?
 		scr, err := slashCommand.BuildResponse()
 		if err == nil {
 			// //TODO: how to test this?
-			go slack.SendDelayedResponse(slashCommand.ResponseURL, scr)
+			go slack.SendDelayedResponse(slashCommand.ResponseURL(), scr)
 			w.WriteHeader(200)
 			return
 		}

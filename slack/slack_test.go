@@ -57,9 +57,9 @@ func TestSlashCommandBuildResponseForTacoLoco(t *testing.T) {
 	}))
 	client := tacofancy.NewClient(apiStub.URL, nil)
 	slashCommand := SlashCommand{
-		Command: "/taco", Text: "loco",
-		Token: "testtoken", ResponseURL: "https://example.org/",
-		ChannelId: "fake", UserId: "fake", TacofancyClient: client}
+		command: "/taco", text: "loco",
+		token: "testtoken", responseURL: "https://example.org/",
+		channelID: "fake", userID: "fake", tacofancyClient: client}
 
 	response, err := slashCommand.BuildResponse()
 
@@ -70,20 +70,9 @@ func TestSlashCommandBuildResponseForTacoLoco(t *testing.T) {
 	json.Unmarshal([]byte(randomApiResponse), &randomApiData)
 	attachments := BuildAttachments(randomApiData) // from slack.go
 	attachments[0]["title"] = "A Delicious Random Taco"
-	expectedResponse := SlashCommandResponse{
-		ResponseType: "in_channel",
-		Text:         "",
-		Attachments:  attachments}
+	expectedResponse := NewSlashCommandResponse("in_channel", "", attachments)
 
-	if expectedResponse.ResponseType != response.ResponseType {
-		t.Errorf("oh no")
-	}
-
-	if expectedResponse.Text != response.Text {
-		t.Errorf("oh no")
-	}
-
-	if !reflect.DeepEqual(response.Attachments[0], expectedResponse.Attachments[0]) {
+	if !reflect.DeepEqual(response, expectedResponse) {
 		t.Errorf("Expected SlashCommandResponse of:  %v\n\n but got: %v", expectedResponse, response)
 	}
 }
@@ -110,11 +99,8 @@ func TestBuildAttachments(t *testing.T) {
 	expectedAttachments[0]["text"] = taco.Description()
 	expectedAttachments[0]["fields"] = fields
 
-	if attachments[0]["text"] != expectedAttachments[0]["text"] {
-		t.Errorf("uh oh")
-	}
-	if !reflect.DeepEqual(attachments[0]["fields"], expectedAttachments[0]["fields"]) {
-		t.Errorf("Expected:\n\n%v\n\nGot:\n\n%v", expectedAttachments[0]["fields"], attachments[0]["fields"])
+	if !reflect.DeepEqual(attachments, expectedAttachments) {
+		t.Errorf("Expected:\n\n%v\n\nGot:\n\n%v", expectedAttachments, attachments)
 	}
 }
 
@@ -127,9 +113,17 @@ func TestVerifyToken(t *testing.T) {
 }
 
 func TestNewRecipeAttachmentField(t *testing.T) {
-
+	//TODO
 }
 
 func TestNewTacoPart(t *testing.T) {
+	//TODO
+}
 
+func TestNewSlashCommandResponse(t *testing.T) {
+	//TODO
+}
+
+func TestNewSlashCommand(t *testing.T) {
+	// TODO
 }

@@ -45,17 +45,17 @@ func getQuote() string {
 }
 
 // Returns a new SlashCommand struct
-func NewSlashCommand(token, teamID, teamDomain, enterprise, enterpriseName, channelID, channelName, userID, userName,
-	command, text, responseURL, triggerID string, tacofancyClient tacofancy.Client) SlashCommand {
+func NewSlashCommand(token, command, text, responseURL, channelID, channelName, userID, userName, teamID, teamDomain,
+	enterprise, enterpriseName, triggerID string, tacofancyClient tacofancy.Client) SlashCommand {
 
 	return SlashCommand{token: token, teamID: teamID, teamDomain: teamDomain, enterprise: enterprise,
 		enterpriseName: enterpriseName, channelID: channelID, userName: userName, command: command, text: text,
-		responseURL: responseURL, triggerID: triggerID, tacofancyClien: tacofancyClient}
+		responseURL: responseURL, triggerID: triggerID, tacofancyClient: tacofancyClient}
 
 }
 
 // Example slash command from docs
-//     token=gIkuvaNzQIHg97ATvDxqgjtO
+// token=gIkuvaNzQIHg97ATvDxqgjtO
 // team_id=T0001
 // team_domain=example
 // enterprise_id=E0001
@@ -96,12 +96,76 @@ type SlashCommand struct {
 	tacofancyClient tacofancy.Client
 }
 
-// A slashcommand response attachment
-type AttachmentField struct {
+func (sc SlashCommand) Token() string                     { return sc.token }
+func (sc SlashCommand) TeamID() string                    { return sc.teamID }
+func (sc SlashCommand) TeamDomain() string                { return sc.teamDomain }
+func (sc SlashCommand) Enterprise() string                { return sc.enterprise }
+func (sc SlashCommand) EnterpriseName() string            { return sc.enterpriseName }
+func (sc SlashCommand) ChannelID() string                 { return sc.channelID }
+func (sc SlashCommand) ChannelName() string               { return sc.channelName }
+func (sc SlashCommand) UserID() string                    { return sc.userID }
+func (sc SlashCommand) UserName() string                  { return sc.userName }
+func (sc SlashCommand) Command() string                   { return sc.command }
+func (sc SlashCommand) Text() string                      { return sc.text }
+func (sc SlashCommand) ResponseURL() string               { return sc.responseURL }
+func (sc SlashCommand) TriggerID() string                 { return sc.triggerID }
+func (sc SlashCommand) TacofancyClient() tacofancy.Client { return sc.tacofancyClient }
+
+// To allow for marshaling/unmarshaling an AttachmentField
+type attachmentFieldJSON struct {
 	Title     string `json:"title"`
 	Value     string `json:"value"`
 	Short     bool   `json:"short"`
 	TitleLink string `json:"title_link"`
+}
+
+// A slashcommand response attachment
+type AttachmentField struct {
+	title     string `json:"title"`
+	value     string `json:"value"`
+	short     bool   `json:"short"`
+	titleLink string `json:"title_link"`
+}
+
+func (a AttachmentField) Title() string {
+	return a.title
+}
+
+func (a AttachmentField) Value() string {
+	return a.value
+}
+
+func (a AttachmentField) Short() bool {
+	return a.short
+}
+
+func (a AttachmentField) TitleLink() string {
+	return a.titleLink
+}
+
+// Marshal an AttachmentField using attachmentFieldJSON
+func (a *AttachmentField) MarshalJSON() ([]byte, error) {
+	marshalable := attachmentFieldJSON{
+		Title:     a.title,
+		Value:     a.value,
+		Short:     a.short,
+		TitleLink: a.titleLink}
+	return json.Marshal(marshalable)
+}
+
+// Unmarshal an AttachmentField using attachmentFieldJSON
+func (a *AttachmentField) UnmarshalJSON(data []byte) error {
+	unmarshalable := attachmentFieldJSON{}
+	err := json.Unmarshal(data, &unmarshalable)
+	if err != nil {
+		return err
+	}
+	a.title = unmarshalable.Title
+	a.value = unmarshalable.Value
+	a.short = unmarshalable.Short
+	a.titleLink = unmarshalable.TitleLink
+
+	return nil
 }
 
 // Verifies the slack command's token by matching it up to
@@ -145,9 +209,9 @@ func BuildAttachments(taco tacofancy.Taco) []map[string]interface{} {
 
 func NewRecipeAttachmentField(title string, part tacofancy.TacoPart) AttachmentField {
 	return AttachmentField{
-		Title: title + ": ",
-		Value: "<" + githubRawUrlToRepo(part.URL) + "|" + part.Name + ">",
-		Short: true}
+		title: title + ": ",
+		value: "<" + githubRawUrlToRepo(part.URL) + "|" + part.Name + ">",
+		short: true}
 }
 
 // TODO: take the taco as an arg?  Then these become super easy to test since there is no api call
@@ -165,7 +229,7 @@ func NewTacoRecipeResponse(client tacofancy.Client) (SlashCommandResponse, error
 	// just become one with some unused parts or I go with a whole bunch of duplicated getters/setters
 	attachments[0]["title"] = fullTaco.Name()
 	attachments[0]["title_link"] = githubRawUrlToRepo(fullTaco.URL())
-	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+	return NewSlashCommandResponse("in_channel", "", attachments), nil
 }
 
 // Returns a SlashCommandResponse for the command `/taco loco`
@@ -177,7 +241,7 @@ func NewTacoLocoResponse(client tacofancy.Client) (SlashCommandResponse, error) 
 
 	attachments := BuildAttachments(randomTaco)
 	attachments[0]["title"] = "A Delicious Random Taco"
-	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+	return NewSlashCommandResponse("in_channel", "", attachments), nil
 }
 
 func NewTacoGrandeResponse() (SlashCommandResponse, error) {
@@ -186,47 +250,90 @@ func NewTacoGrandeResponse() (SlashCommandResponse, error) {
 	attachments[0]["title"] = "Taco Grande"
 	attachments[0]["title_link"] = "https://www.youtube.com/watch?v=mX18yNwqnMg"
 	attachments[0]["text"] = getQuote()
-	return SlashCommandResponse{ResponseType: "in_channel", Text: "", Attachments: attachments}, nil
+	return NewSlashCommandResponse("in_channel", "", attachments), nil
 }
 
 // Builds a SlashCommandResponse to use for responding to a Slack SlashCommand
 // TODO:  make a responder interface and pass that in?  then t.Respond() could
 // be called?  Not sure since that moves the slack specific logic out of here
 // but could almost certainly be far more useful for a more general slack framework
-func (sc *SlashCommand) BuildResponse() (SlashCommandResponse, error) {
+func (sc SlashCommand) BuildResponse() (SlashCommandResponse, error) {
 	// respond to slash command
 	// TODO: Have a response factory registry?
-	parts := strings.Split(sc.Text, " ")
+	parts := strings.Split(sc.Text(), " ")
 	commandType := "recipe"
 	if len(parts) >= 1 && parts[0] != "" {
 		commandType = strings.ToLower(parts[0])
 	}
 
 	if commandType == "recipe" {
-		return NewTacoRecipeResponse(sc.TacofancyClient)
+		return NewTacoRecipeResponse(sc.TacofancyClient())
 	} else if commandType == "loco" {
-		return NewTacoLocoResponse(sc.TacofancyClient)
+		return NewTacoLocoResponse(sc.TacofancyClient())
 	} else if commandType == "grande" {
 		return NewTacoGrandeResponse()
 	}
-	return SlashCommandResponse{ResponseType: "in_channel", Text: "I didn't understand that command"}, nil
+	return NewSlashCommandResponse("in_channel", "I didn't understand that command", nil), nil
 }
 
 // Builds a SlashCommandResponse and calls SendDelayedResponse() and returns the SendDelayedResponse()'s
 // return value in the channel.
-func (sc *SlashCommand) RespondAsync(ch chan error) {
+func (sc SlashCommand) RespondAsync(ch chan error) {
 	defer close(ch)
 	scr, _ := sc.BuildResponse()
-	ch <- SendDelayedResponse(sc.ResponseURL, scr)
+	ch <- SendDelayedResponse(sc.ResponseURL(), scr)
 }
 
-type SlashCommandResponse struct {
+// Creates and returns new SlashCommandResponse
+func NewSlashCommandResponse(responseType, text string, attachments []map[string]interface{}) SlashCommandResponse {
+	return SlashCommandResponse{responseType: responseType, text: text, attachments: attachments}
+}
+
+// Struct used for marshaling and unmarshaling a slashCommandResponseJSON
+// want to call this a slashCommandResponseMarshaler, but the -er ending denotes
+// an interface
+type slashCommandResponseJSON struct {
 	ResponseType string `json:"response_type"`
 	Text         string `json:"text"`
 	// attachments could get more complex
 	// https://api.slack.com/docs/message-attachments
 	// using interface as the value data type here because it could be strings or a list
 	Attachments []map[string]interface{} `json:"attachments"`
+}
+
+type SlashCommandResponse struct {
+	responseType string `json:"response_type"`
+	text         string `json:"text"`
+	// attachments could get more complex
+	// https://api.slack.com/docs/message-attachments
+	// using interface as the value data type here because it could be strings or a list
+	attachments []map[string]interface{} `json:"attachments"`
+}
+
+// Marshal an SlashCommandResponse using slashCommandResponseJSON
+func (scr *SlashCommandResponse) MarshalJSON() ([]byte, error) {
+	marshalable := slashCommandResponseJSON{
+		ResponseType: scr.responseType,
+		Text:         scr.text,
+		Attachments:  scr.attachments}
+	return json.Marshal(marshalable)
+}
+
+// Unmarshal an SlashCommandResponse using slashCommandResponseJSON
+func (scr *SlashCommandResponse) UnmarshalJSON(data []byte) error {
+	// Unmarshalable is confusing. It sounds like it cannot be marshalled, but
+	// really it can be unmarshalled.  Unmarshaler would make sense, but again,
+	// the -er ending is used to identify an interface.  Naming things is hard.
+	unmarshalable := slashCommandResponseJSON{}
+	err := json.Unmarshal(data, &unmarshalable)
+	if err != nil {
+		return err
+	}
+	scr.responseType = unmarshalable.ResponseType
+	scr.text = unmarshalable.Text
+	scr.attachments = unmarshalable.Attachments
+
+	return nil
 }
 
 // Sends the provided SlashCommandResponse to the provided SlashCommand
